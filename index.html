@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таро Ключ — Онлайн Расклады с QR</title>
+    <!-- Подключаем библиотеку для сканирования QR-кодов через камеру -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root {
+            --bg-color: #120f1d;
+            --card-bg: #1e1932;
+            --accent-gold: #d4af37;
+            --text-main: #f0f0f0;
+            --text-muted: #b0a8c0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--bg-color);
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        header h1 {
+            color: var(--accent-gold);
+            margin: 0;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 20px;
+            flex: 1;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        /* Карточки раскладов */
+        .spread-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .spread-card:hover {
+            border-color: var(--accent-gold);
+            transform: translateY(-2px);
+        }
+        .spread-card h3 {
+            margin: 0 0 5px 0;
+            color: var(--accent-gold);
+            font-size: 18px;
+        }
+        .spread-card p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        /* Кнопки */
+        .btn {
+            background: var(--accent-gold);
+            color: #120f1d;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .btn:active {
+            opacity: 0.8;
+        }
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            margin-top: 10px;
+        }
+        /* Схема расклада */
+        .schema-box {
+            background: var(--card-bg);
+            border: 1px dashed var(--accent-gold);
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        /* Камера */
+        #reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--accent-gold);
+        }
+        .scanner-status {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 16px;
+            color: var(--accent-gold);
+            font-weight: bold;
+        }
+        /* Результаты */
+        .result-item {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--accent-gold);
+        }
+        .result-item h4 {
+            margin: 0 0 5px 0;
+            color: var(--accent-gold);
+        }
+        .result-item p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Таро Ключ</h1>
+    </header>
+
+    <div class="content">
+        
+        <!-- ЭКРАН 1: СПИСОК РАСКЛАДОВ -->
+        <div id="screen-home" class="screen active">
+            <h2 style="font-size: 18px; margin-bottom: 15px;">Выберите тип расклада:</h2>
+            <div id="spreads-list">
+                <!-- Динамически заполняется из JS -->
+            </div>
+        </div>
+
+        <!-- ЭКРАН 2: СХЕМА РАСКЛАДА -->
+        <div id="screen-schema" class="screen">
+            <h2 id="schema-title" style="color: var(--accent-gold); margin-top:0;">Название расклада</h2>
+            <p id="schema-desc" style="color: var(--text-muted); font-size: 14px;"></p>
+            
+            <div class="schema-box">
+                <p id="schema-positions-text" style="margin:0; font-size: 15px; line-height: 1.5;"></p>
+            </div>
+
+            <button class="btn" onclick="startScanning()">Включить камеру и сканировать</button>
+            <button class="btn btn-secondary" onclick="goHome()">Назад к выбору</button>
+        </div>
+
+        <!-- ЭКРАН 3: СКАНЕР КАМЕРЫ -->
+        <div id="screen-scanner" class="screen">
+            <div class="scanner-status" id="scanner-instruction">Наведите камеру на карту...</div>
+            <div id="reader"></div>
+            <button class="btn btn-secondary" onclick="stopScanningAndBack()">Отмена</button>
+        </div>
+
+        <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
+        <div id="screen-results" class="screen">
+            <h2 style="color: var(--accent-gold); margin-top:0;">Результаты расклада</h2>
+            <div id="results-container">
+                <!-- Сюда выведутся отсканированные карты -->
+            </div>
+            <button class="btn" onclick="goHome()">Новый расклад</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 1. БАЗА ДАННЫХ КАРТ (Пример с основными арканами для теста сканирования)
+    const tarotDatabase = {
+        "TAROT_00_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, доверие к вселенной." },
+        "TAROT_01_MAGICIAN": { name: "1. Маг", meaning: "Воля, мастерство, активное действие, уверенность." },
+        "TAROT_02_HIGH_PRIESTESS": { name: "2. Верховная Жрица", meaning: "Интуиция, тайны, скрытые знания, подсознание." },
+        "TAROT_03_EMPRESS": { name: "3. Императрица", meaning: "Плодородие, изобилие, материнство, творчество, забота." },
+        "TAROT_04_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, ответственность, стабильность." }
+    };
+
+    // 2. СПИСОК РАСКЛАДОВ
+    const spreads = [
+        { id: 1, name: "Карта дня", count: 1, desc: "Энергия и совет на текущий день", positions: ["Совет и энергия дня"] },
+        { id: 2, name: "Выбор", count: 1, desc: "Ответ на конкретный вопрос", positions: ["Ответ на вопрос"] },
+        { id: 3, name: "Три карты", count: 3, desc: "Классика: Прошлое, Настоящее, Будущее", positions: ["Прошлое", "Настоящее", "Будущее"] },
+        { id: 4, name: "Расклад на день", count: 5, desc: "Разбор дня по этапам", positions: ["Утро", "День", "Вечер", "Совет", "Предупреждение"] },
+        { id: 5, name: "Что меня ждёт с этим человеком?", count: 6, desc: "Анализ отношений и перспектив", positions: ["Его/ее мысли", "Чувства", "Истинные намерения", "Что скрывает", "К чему приведет", "Итог"] },
+        { id: 6, name: "Самопознание", count: 7, desc: "Глубинный психологический портрет", positions: ["Кто я сейчас", "Мои страхи", "Мои таланты", "Отношение к миру", "Чему научиться", "Скрытые ресурсы", "Путь развития"] },
+        { id: 7, name: "Кельтский крест", count: 10, desc: "Классический подробный расклад", positions: ["Суть ситуации", "Препятствие", "Прошлое", "Будущее", "Цель", "Ближайшее будущее", "Позиция спрашивающего", "Окружение", "Страхи", "Итог"] }
+    ];
+
+    let currentSpread = null;
+    let currentStep = 0;
+    let scannedCards = [];
+    let html5QrCode = null;
+
+    // Инициализация главного экрана
+    function renderHome() {
+        const listEl = document.getElementById('spreads-list');
+        listEl.innerHTML = '';
+        spreads.forEach(spread => {
+            const card = document.createElement('div');
+            card.className = 'spread-card';
+            card.innerHTML = `<h3>${spread.name} (${spread.count} карт)</h3><p>${spread.desc}</p>`;
+            card.onclick = () => selectSpread(spread);
+            listEl.appendChild(card);
+        });
+    }
+
+    function selectSpread(spread) {
+        currentSpread = spread;
+        currentStep = 0;
+        scannedCards = [];
+
+        document.getElementById('schema-title').innerText = spread.name;
+        document.getElementById('schema-desc').innerText = spread.desc;
+        
+        let posText = "Позиции расклада:<br>";
+        spread.positions.forEach((pos, idx) => {
+            posText += `<b>${idx + 1}.</b> ${pos}<br>`;
+        });
+        document.getElementById('schema-positions-text').innerHTML = posText;
+
+        switchScreen('screen-schema');
+    }
+
+    function startScanning() {
+        switchScreen('screen-scanner');
+        
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        updateScannerInstruction();
+
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            onScanSuccess, 
+            onScanFailure
+        ).catch(err => {
+            alert("Не удалось запустить камеру. Убедитесь, что разрешили доступ к ней.");
+            goHome();
+        });
+    }
+
+    function updateScannerInstruction() {
+        const posName = currentSpread.positions[currentStep];
+        document.getElementById('scanner-instruction').innerHTML = 
+            `Сканируйте карту [${currentStep + 1} из ${currentSpread.count}]<br><span style="color:#fff; font-size:14px;">Позиция: "${posName}"</span>`;
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // Проверяем, есть ли такой код в базе (или симулируем, если сгенерировали тестовый QR)
+        // Для теста: если отсканирован любой текст, запишем его как карту или найдем в базе
+        let cardData = tarotDatabase[decodedText];
+        
+        if (!cardData) {
+            // Если отсканировался кастомный QR (например, строка с текстом), берем её как название
+            cardData = { name: decodedText, meaning: "Индивидуальная карта из вашего расклада." };
+        }
+
+        scannedCards.push({
+            position: currentSpread.positions[currentStep],
+            card: cardData
+        });
+
+        currentStep++;
+
+        // Вибро-отклик при успешном сканировании (если поддерживается телефоном)
+        if (navigator.vibrate) navigator.vibrate(100);
+
+        if (currentStep >= currentSpread.count) {
+            // Все карты отсканированы!
+            stopCameraAndShowResults();
+        } else {
+            updateScannerInstruction();
+        }
+    }
+
+    function onScanFailure(error) {
+        // Ошибки сканирования кадров (игнорируем, пока QR не попадется в поле зрения)
+    }
+
+    function stopCameraAndShowResults() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                showResults();
+            }).catch(err => {
+                showResults();
+            });
+        } else {
+            showResults();
+        }
+    }
+
+    function stopScanningAndBack() {
+        if (html5QrCode) {
+            html5QrCode.stop().finally(() => {
+                goHome();
+            });
+        } else {
+            goHome();
+        }
+    }
+
+    function showResults() {
+        const container = document.getElementById('results-container');
+        container.innerHTML = '';
+
+        scannedCards.forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.innerHTML = `
+                <h4>Позиция ${idx + 1}: ${item.position}</h4>
+                <p><b>Карта:</b> ${item.card.name}</p>
+                <p style="margin-top: 5px;"><i>Значение:</i> ${item.card.meaning}</p>
+            `;
+            container.appendChild(div);
+        });
+
+        switchScreen('screen-results');
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function goHome() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().catch(() => {});
+        }
+        switchScreen('screen-home');
+    }
+
+    // Запуск приложения
+    renderHome();
+</script>
+
+</body>
+</html>
