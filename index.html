@@ -291,4 +291,300 @@
     // 1. БАЗА ДАННЫХ КАРТ
     const tarotDatabase = {
         "TAROT_00_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, доверие к вселенной." },
-        "TAROT_01_MAGICIAN
+        "TAROT_01_MAGICIAN": { name: "1. Маг", meaning: "Воля, мастерство, активное действие, уверенность." },
+        "TAROT_02_HIGH_PRIESTESS": { name: "2. Верховная Жрица", meaning: "Интуиция, тайны, скрытые знания, подсознание." },
+        "TAROT_03_EMPRESS": { name: "3. Императрица", meaning: "Плодородие, изобилие, материнство, творчество, забота." },
+        "TAROT_04_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, ответственность, стабильность." }
+    };
+
+    // 2. СПИСОК РАСКЛАДОВ
+    const spreads = [
+        { 
+            id: 1, 
+            name: "Три карты", 
+            count: 3, 
+            desc: "Прошлое, настоящее, будущее и совет", 
+            schemaImage: "shema3.jpg", 
+            about: "Разложите карты перед собой в порядке, в котором вы их вытянули. Вы также можете открыть четвертую карту, которая будет советом, как поступить.",
+            positions: [
+                "Карта 1 — Прошлое (главные моменты прошедшего, которые влияют на текущее положение)",
+                "Карта 2 — Настоящее (текущее положение дел)",
+                "Карта 3 — Будущее (путь, по которому будет развиваться ситуация далее)"
+            ] 
+        },
+        { 
+            id: 2, 
+            name: "Карта дня", 
+            count: 1, 
+            desc: "Элементарный экспресс-расклад на сегодня", 
+            schemaImage: "", 
+            about: "Элементарный экспресс-расклад. Используется для получения совета или предсказания на текущий день. Состоит из одной карты, которая вытягивается случайным образом из колоды. Выбор карты дня поможет сфокусироваться на ключевых аспектах дня и предостеречь от проблем.",
+            positions: [
+                "Карта 1 — Совет и ключевая энергия Вашего дня"
+            ] 
+        },
+        { 
+            id: 3, 
+            name: "Выбор", 
+            count: 6, 
+            desc: "Принятие верного решения (два пути)", 
+            schemaImage: "shema6vibor.jpg", 
+            about: "Довольно простой, но точный расклад, позволяющий увидеть решение проблемы или сделать правильный выбор. Выложите по три карты в два столбца, проговорив вопрос, который вас интересует.",
+            positions: [
+                "Карта 1 — Вариант А: Перспективы и суть решения",
+                "Карта 2 — Вариант А: К чему приведет этот выбор",
+                "Карта 3 — Вариант А: Итог данного решения",
+                "Карта 4 — Вариант Б: Перспективы и суть альтернативы",
+                "Карта 5 — Вариант Б: К чему приведет второй выбор",
+                "Карта 6 — Вариант Б: Итог альтернативного пути"
+            ] 
+        },
+        { 
+            id: 4, 
+            name: "Что меня ждёт с этим человеком?", 
+            count: 6, 
+            desc: "Анализ отношений и совместного будущего", 
+            schemaImage: "shema6chelovek.jpg", 
+            about: "В этом раскладе вы можете проанализировать отношения с тем, кто вам небезразличен.",
+            positions: [
+                "Карта 1 — Как обстоят дела в данный момент",
+                "Карта 2 — Что действительно чувствует партнер по отношению к вам",
+                "Карта 3 — Как видит вас партнер",
+                "Карта 4 — Самый важный вопрос расклада: есть ли будущее между вами и какое оно",
+                "Карта 5 — Какие перемены произойдут в вашей жизни с этим человеком",
+                "Карта 6 — От чего нужно будет отказаться, чтобы быть с этим человеком"
+            ] 
+        },
+        { 
+            id: 5, 
+            name: "Расклад на день", 
+            count: 5, 
+            desc: "Эмоциональное, энергетическое и физическое состояние", 
+            schemaImage: "shema5naden.jpg", 
+            about: "Данный расклад поможет вам подготовиться к новому дню и прожить его максимально качественно и осознанно.",
+            positions: [
+                "Карта 1 — Ваше эмоциональное состояние",
+                "Карта 2 — Ваше энергетическое состояние",
+                "Карта 3 — Ваше физическое состояние",
+                "Карта 4 — Что нужно сделать, чтобы исправить свое состояние",
+                "Карта 5 — Что нужно сделать, чтобы этот день прошел плодотворно"
+            ] 
+        },
+        { 
+            id: 6, 
+            name: "Самопознание", 
+            count: 7, 
+            desc: "Глубинный психологический портрет и предназначение", 
+            schemaImage: "shema7samopoznanie.jpg", 
+            about: "Расклад поможет понять себя и для чего вы пришли в мир.",
+            positions: [
+                "Карта 1 — Кем пришла в этот мир ваша душа?",
+                "Карта 2 — Кто вы в этом мире?",
+                "Карта 3 — Чем вы сейчас занимаетесь?",
+                "Карта 4 — Для чего вы пришли в этот мир?",
+                "Карта 5 — Что будет, если вы будете идти по верному пути?",
+                "Карта 6 — Что вас ждет, если вы не будете идти по верному пути?",
+                "Карта 7 — Как преодолеть себя?"
+            ] 
+        },
+        { 
+            id: 7, 
+            name: "Кельтский крест", 
+            count: 10, 
+            desc: "Глубокое и детальное понимание ситуации", 
+            schemaImage: "shema10krest.jpg", 
+            about: "Один из самых часто применяемых раскладов Таро. Он состоит из десяти карт и предоставляет глубокое и детальное понимание вашей ситуации, проблем или вопроса, а также может быть использован для предсказания будущих событий.",
+            positions: [
+                "Карта 1 — Настоящее положение (текущая ситуация)",
+                "Карта 2 — Препятствия (вызовы и трудности)",
+                "Карта 3 — Основа ситуации (корни и прошлые факторы)",
+                "Карта 4 — Прошлое (внешние влияния и обстановка)",
+                "Карта 5 — Цели и стремления (направление развития)",
+                "Карта 6 — Ближайшее будущее",
+                "Карта 7 — Внутреннее влияние (мысли, чувства, подсознание)",
+                "Карта 8 — Внешние влияния (взгляд со стороны)",
+                "Карта 9 — Надежды и страхи",
+                "Карта 10 — Итог (возможный результат)"
+            ] 
+        }
+    ];
+
+    let currentSpread = null;
+    let currentStep = 0;
+    let scannedCards = [];
+    let html5QrCode = null;
+    let isWaitingForNext = false;
+
+    function renderHome() {
+        const listEl = document.getElementById('spreads-list');
+        listEl.innerHTML = '';
+        spreads.forEach(spread => {
+            const card = document.createElement('div');
+            card.className = 'spread-card';
+            card.innerHTML = `<h3>${spread.name} (${spread.count} карт)</h3><p>${spread.desc}</p>`;
+            card.onclick = () => selectSpread(spread);
+            listEl.appendChild(card);
+        });
+    }
+
+    function selectSpread(spread) {
+        currentSpread = spread;
+        currentStep = 0;
+        scannedCards = [];
+
+        document.getElementById('schema-title').innerText = spread.name;
+        document.getElementById('schema-about-text').innerText = spread.about;
+        
+        const imgEl = document.getElementById('schema-image');
+        if (spread.schemaImage && spread.schemaImage.trim() !== "") {
+            imgEl.src = spread.schemaImage;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+
+        let posText = "<b>Значение позиций карт:</b><br>";
+        spread.positions.forEach((pos) => {
+            posText += `• ${pos}<br>`;
+        });
+        document.getElementById('schema-positions-text').innerHTML = posText;
+
+        switchScreen('screen-schema');
+    }
+
+    function startScanning() {
+        switchScreen('screen-scanner');
+        document.getElementById('scan-next-container').style.display = 'none';
+        isWaitingForNext = false;
+        
+        html5QrCode = new Html5Qrcode("reader");
+        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+        
+        updateScannerInstruction();
+
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            onScanSuccess, 
+            onScanFailure
+        ).catch(err => {
+            alert("Не удалось запустить камеру. Убедитесь, что разрешили доступ к ней.");
+            goHome();
+        });
+    }
+
+    function updateScannerInstruction() {
+        const posName = currentSpread.positions[currentStep];
+        document.getElementById('scanner-instruction').innerHTML = 
+            `Сканируйте карту [${currentStep + 1} из ${currentSpread.count}]<br><span style="color:#fff; font-size:14px;">Позиция: "${posName}"</span>`;
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        if (isWaitingForNext) return;
+
+        isWaitingForNext = true;
+
+        let cardData = tarotDatabase[decodedText];
+        if (!cardData) {
+            cardData = { name: decodedText, meaning: "Карта из расклада." };
+        }
+
+        scannedCards.push({
+            position: currentSpread.positions[currentStep],
+            card: cardData
+        });
+
+        if (navigator.vibrate) navigator.vibrate(100);
+
+        if (html5QrCode) {
+            html5QrCode.pause(true);
+        }
+
+        document.getElementById('scanned-card-info').innerText = `Считана карта для позиции "${currentSpread.positions[currentStep]}": ${cardData.name}`;
+        
+        const nextBtn = document.getElementById('btn-next-card');
+        if (currentStep + 1 >= currentSpread.count) {
+            nextBtn.innerText = "Посмотреть результаты расклада";
+        } else {
+            nextBtn.innerText = `Сканировать следующую карту (${currentStep + 2}/${currentSpread.count})`;
+        }
+
+        document.getElementById('scan-next-container').style.display = 'block';
+    }
+
+    function prepareNextCard() {
+        currentStep++;
+        document.getElementById('scan-next-container').style.display = 'none';
+
+        if (currentStep >= currentSpread.count) {
+            stopCameraAndShowResults();
+        } else {
+            isWaitingForNext = false;
+            updateScannerInstruction();
+            if (html5QrCode) {
+                html5QrCode.resume();
+            }
+        }
+    }
+
+    function onScanFailure(error) {
+        // Пропуск кадров без QR
+    }
+
+    function stopCameraAndShowResults() {
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                showResults();
+            }).catch(() => {
+                showResults();
+            });
+        } else {
+            showResults();
+        }
+    }
+
+    function stopScanningAndBack() {
+        if (html5QrCode) {
+            html5QrCode.stop().finally(() => {
+                goHome();
+            });
+        } else {
+            goHome();
+        }
+    }
+
+    function showResults() {
+        const container = document.getElementById('results-container');
+        container.innerHTML = '';
+
+        scannedCards.forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.innerHTML = `
+                <h4>Позиция ${idx + 1}: ${item.position}</h4>
+                <p><b>Карта:</b> ${item.card.name}</p>
+                <p style="margin-top: 5px;"><i>Значение:</i> ${item.card.meaning}</p>
+            `;
+            container.appendChild(div);
+        });
+
+        switchScreen('screen-results');
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function goHome() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().catch(() => {});
+        }
+        switchScreen('screen-home');
+    }
+
+    renderHome();
+</script>
+
+</body>
+</html>
