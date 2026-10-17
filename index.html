@@ -9,46 +9,66 @@
     <style>
         :root {
             --bg-color: #120f1d;
-            --card-bg: #1e1932;
+            --card-bg: rgba(30, 25, 50, 0.85); /* Полупрозрачный фон карточек */
             --accent-gold: #d4af37;
             --text-main: #f0f0f0;
             --text-muted: #b0a8c0;
         }
+
         body {
-            background-image: url('your_background.jpg'); /fon menu.jpg/
-background-size: cover;
-background-position: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            /* ПОДКЛЮЧЕН ВАШ ФОН fon menu.jpg */
+            background-image: linear-gradient(rgba(18, 15, 29, 0.70), rgba(18, 15, 29, 0.85)), url('fon menu.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
         }
+
         .container {
             width: 100%;
             max-width: 480px;
             min-height: 100vh;
-            background: var(--bg-color);
+            background: rgba(18, 15, 29, 0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
         }
+
         header {
             text-align: center;
             padding: 20px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
         }
+
         header h1 {
             color: var(--accent-gold);
             margin: 0;
             font-size: 24px;
             letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
         }
+
         .content {
             padding: 20px;
             flex: 1;
         }
+
         .screen {
             display: none;
         }
+
         .screen.active {
             display: block;
         }
+
         /* Карточки раскладов */
         .spread-card {
             background: var(--card-bg);
@@ -59,23 +79,28 @@ background-position: center;
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
         .spread-card:hover {
             border-color: var(--accent-gold);
             transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
+
         .spread-card h3 {
             margin: 0 0 5px 0;
             color: var(--accent-gold);
             font-size: 18px;
         }
+
         .spread-card p {
             margin: 0;
             color: var(--text-muted);
             font-size: 14px;
         }
+
         /* Кнопки */
         .btn {
-            background: var(--accent-gold);
+            background: linear-gradient(135deg, #e6c561, #b88e28);
             color: #120f1d;
             border: none;
             width: 100%;
@@ -84,25 +109,30 @@ background-position: center;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 15px;
             text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
         }
+
         .btn:active {
-            opacity: 0.8;
+            transform: scale(0.98);
+            opacity: 0.9;
         }
+
         .btn-secondary {
-            background: transparent;
+            background: rgba(18, 15, 29, 0.6);
             border: 1px solid var(--accent-gold);
             color: var(--accent-gold);
-            margin-top: 10px;
+            box-shadow: none;
         }
-        /* Схема расклада */
+
+        /* Блок схемы расклада */
         .schema-box {
             background: var(--card-bg);
             border: 1px dashed var(--accent-gold);
             border-radius: 12px;
-            padding: 20px;
-            min-height: 150px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -110,20 +140,43 @@ background-position: center;
             text-align: center;
             margin-bottom: 20px;
         }
-        /* Камера */
+
+        .schema-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+        }
+
+        /* Камера и сканер */
         #reader {
             width: 100%;
             border-radius: 12px;
             overflow: hidden;
             border: 2px solid var(--accent-gold);
+            background: #000;
         }
+
         .scanner-status {
             text-align: center;
-            margin: 15px 0;
+            margin: 10px 0 15px 0;
             font-size: 16px;
             color: var(--accent-gold);
             font-weight: bold;
         }
+
+        .success-banner {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid #28a745;
+            color: #75b798;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
         /* Результаты */
         .result-item {
             background: var(--card-bg);
@@ -132,10 +185,12 @@ background-position: center;
             margin-bottom: 12px;
             border-left: 4px solid var(--accent-gold);
         }
+
         .result-item h4 {
             margin: 0 0 5px 0;
             color: var(--accent-gold);
         }
+
         .result-item p {
             margin: 0;
             font-size: 14px;
@@ -155,9 +210,7 @@ background-position: center;
         <!-- ЭКРАН 1: СПИСОК РАСКЛАДОВ -->
         <div id="screen-home" class="screen active">
             <h2 style="font-size: 18px; margin-bottom: 15px;">Выберите тип расклада:</h2>
-            <div id="spreads-list">
-                <!-- Динамически заполняется из JS -->
-            </div>
+            <div id="spreads-list"></div>
         </div>
 
         <!-- ЭКРАН 2: СХЕМА РАСКЛАДА -->
@@ -166,7 +219,8 @@ background-position: center;
             <p id="schema-desc" style="color: var(--text-muted); font-size: 14px;"></p>
             
             <div class="schema-box">
-                <p id="schema-positions-text" style="margin:0; font-size: 15px; line-height: 1.5;"></p>
+                <img id="schema-image" class="schema-img" src="" alt="Схема расклада" style="display: none;">
+                <p id="schema-positions-text" style="margin:0; font-size: 14px; text-align: left; line-height: 1.5; width: 100%;"></p>
             </div>
 
             <button class="btn" onclick="startScanning()">Включить камеру и сканировать</button>
@@ -176,16 +230,25 @@ background-position: center;
         <!-- ЭКРАН 3: СКАНЕР КАМЕРЫ -->
         <div id="screen-scanner" class="screen">
             <div class="scanner-status" id="scanner-instruction">Наведите камеру на карту...</div>
+            
             <div id="reader"></div>
-            <button class="btn btn-secondary" onclick="stopScanningAndBack()">Отмена</button>
+
+            <div id="scan-next-container" style="display: none;">
+                <div class="success-banner" id="scanned-card-info">
+                    Карта успешно считана!
+                </div>
+                <button class="btn" id="btn-next-card" onclick="prepareNextCard()">
+                    Следующая карта
+                </button>
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="stopScanningAndBack()">Отмена</button>
         </div>
 
         <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
         <div id="screen-results" class="screen">
             <h2 style="color: var(--accent-gold); margin-top:0;">Результаты расклада</h2>
-            <div id="results-container">
-                <!-- Сюда выведутся отсканированные карты -->
-            </div>
+            <div id="results-container"></div>
             <button class="btn" onclick="goHome()">Новый расклад</button>
         </div>
 
@@ -193,7 +256,7 @@ background-position: center;
 </div>
 
 <script>
-    // 1. БАЗА ДАННЫХ КАРТ (Пример с основными арканами для теста сканирования)
+    // 1. БАЗА ДАННЫХ КАРТ
     const tarotDatabase = {
         "TAROT_00_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, доверие к вселенной." },
         "TAROT_01_MAGICIAN": { name: "1. Маг", meaning: "Воля, мастерство, активное действие, уверенность." },
@@ -202,23 +265,72 @@ background-position: center;
         "TAROT_04_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, ответственность, стабильность." }
     };
 
-    // 2. СПИСОК РАСКЛАДОВ
+    // 2. СПИСОК РАСКЛАДОВ (Замените имена картинок на свои файлы, когда загрузите их в GitHub)
     const spreads = [
-        { id: 1, name: "Карта дня", count: 1, desc: "Энергия и совет на текущий день", positions: ["Совет и энергия дня"] },
-        { id: 2, name: "Выбор", count: 1, desc: "Ответ на конкретный вопрос", positions: ["Ответ на вопрос"] },
-        { id: 3, name: "Три карты", count: 3, desc: "Классика: Прошлое, Настоящее, Будущее", positions: ["Прошлое", "Настоящее", "Будущее"] },
-        { id: 4, name: "Расклад на день", count: 5, desc: "Разбор дня по этапам", positions: ["Утро", "День", "Вечер", "Совет", "Предупреждение"] },
-        { id: 5, name: "Что меня ждёт с этим человеком?", count: 6, desc: "Анализ отношений и перспектив", positions: ["Его/ее мысли", "Чувства", "Истинные намерения", "Что скрывает", "К чему приведет", "Итог"] },
-        { id: 6, name: "Самопознание", count: 7, desc: "Глубинный психологический портрет", positions: ["Кто я сейчас", "Мои страхи", "Мои таланты", "Отношение к миру", "Чему научиться", "Скрытые ресурсы", "Путь развития"] },
-        { id: 7, name: "Кельтский крест", count: 10, desc: "Классический подробный расклад", positions: ["Суть ситуации", "Препятствие", "Прошлое", "Будущее", "Цель", "Ближайшее будущее", "Позиция спрашивающего", "Окружение", "Страхи", "Итог"] }
+        { 
+            id: 1, 
+            name: "Карта дня", 
+            count: 1, 
+            desc: "Энергия и совет на текущий день", 
+            schemaImage: "scheme_day.png", 
+            positions: ["Совет и энергия дня"] 
+        },
+        { 
+            id: 2, 
+            name: "Выбор", 
+            count: 1, 
+            desc: "Ответ на конкретный вопрос", 
+            schemaImage: "scheme_choice.png", 
+            positions: ["Ответ на вопрос"] 
+        },
+        { 
+            id: 3, 
+            name: "Три карты", 
+            count: 3, 
+            desc: "Классика: Прошлое, Настоящее, Будущее", 
+            schemaImage: "scheme_3_cards.png", 
+            positions: ["Прошлое", "Настоящее", "Будущее"] 
+        },
+        { 
+            id: 4, 
+            name: "Расклад на день", 
+            count: 5, 
+            desc: "Разбор дня по этапам", 
+            schemaImage: "scheme_day_5.png", 
+            positions: ["Утро", "День", "Вечер", "Совет", "Предупреждение"] 
+        },
+        { 
+            id: 5, 
+            name: "Что меня ждёт с этим человеком?", 
+            count: 6, 
+            desc: "Анализ отношений и перспектив", 
+            schemaImage: "scheme_love_6.png", 
+            positions: ["Его/ее мысли", "Чувства", "Истинные намерения", "Что скрывает", "К чему приведет", "Итог"] 
+        },
+        { 
+            id: 6, 
+            name: "Самопознание", 
+            count: 7, 
+            desc: "Глубинный психологический портрет", 
+            schemaImage: "scheme_self_7.png", 
+            positions: ["Кто я сейчас", "Мои страхи", "Мои таланты", "Отношение к миру", "Чему научиться", "Скрытые ресурсы", "Путь развития"] 
+        },
+        { 
+            id: 7, 
+            name: "Кельтский крест", 
+            count: 10, 
+            desc: "Классический подробный расклад", 
+            schemaImage: "scheme_celtic_10.png", 
+            positions: ["Суть ситуации", "Препятствие", "Прошлое", "Будущее", "Цель", "Ближайшее будущее", "Позиция спрашивающего", "Окружение", "Страхи", "Итог"] 
+        }
     ];
 
     let currentSpread = null;
     let currentStep = 0;
     let scannedCards = [];
     let html5QrCode = null;
+    let isWaitingForNext = false;
 
-    // Инициализация главного экрана
     function renderHome() {
         const listEl = document.getElementById('spreads-list');
         listEl.innerHTML = '';
@@ -239,9 +351,17 @@ background-position: center;
         document.getElementById('schema-title').innerText = spread.name;
         document.getElementById('schema-desc').innerText = spread.desc;
         
-        let posText = "Позиции расклада:<br>";
+        const imgEl = document.getElementById('schema-image');
+        if (spread.schemaImage) {
+            imgEl.src = spread.schemaImage;
+            imgEl.style.display = 'block';
+        } else {
+            imgEl.style.display = 'none';
+        }
+
+        let posText = "<b>Позиции карт:</b><br>";
         spread.positions.forEach((pos, idx) => {
-            posText += `<b>${idx + 1}.</b> ${pos}<br>`;
+            posText += `${idx + 1}. ${pos}<br>`;
         });
         document.getElementById('schema-positions-text').innerHTML = posText;
 
@@ -250,9 +370,11 @@ background-position: center;
 
     function startScanning() {
         switchScreen('screen-scanner');
+        document.getElementById('scan-next-container').style.display = 'none';
+        isWaitingForNext = false;
         
         html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
         
         updateScannerInstruction();
 
@@ -274,13 +396,13 @@ background-position: center;
     }
 
     function onScanSuccess(decodedText, decodedResult) {
-        // Проверяем, есть ли такой код в базе (или симулируем, если сгенерировали тестовый QR)
-        // Для теста: если отсканирован любой текст, запишем его как карту или найдем в базе
+        if (isWaitingForNext) return;
+
+        isWaitingForNext = true;
+
         let cardData = tarotDatabase[decodedText];
-        
         if (!cardData) {
-            // Если отсканировался кастомный QR (например, строка с текстом), берем её как название
-            cardData = { name: decodedText, meaning: "Индивидуальная карта из вашего расклада." };
+            cardData = { name: decodedText, meaning: "Карта из расклада." };
         }
 
         scannedCards.push({
@@ -288,28 +410,42 @@ background-position: center;
             card: cardData
         });
 
-        currentStep++;
-
-        // Вибро-отклик при успешном сканировании (если поддерживается телефоном)
         if (navigator.vibrate) navigator.vibrate(100);
 
+        document.getElementById('scanned-card-info').innerText = `Считана карта для позиции "${currentSpread.positions[currentStep]}": ${cardData.name}`;
+        
+        const nextBtn = document.getElementById('btn-next-card');
+        if (currentStep + 1 >= currentSpread.count) {
+            nextBtn.innerText = "Посмотреть результаты расклада";
+        } else {
+            const nextPosName = currentSpread.positions[currentStep + 1];
+            nextBtn.innerText = `Перейти к карте №${currentStep + 2} (${nextPosName})`;
+        }
+
+        document.getElementById('scan-next-container').style.display = 'block';
+    }
+
+    function prepareNextCard() {
+        currentStep++;
+        document.getElementById('scan-next-container').style.display = 'none';
+
         if (currentStep >= currentSpread.count) {
-            // Все карты отсканированы!
             stopCameraAndShowResults();
         } else {
+            isWaitingForNext = false;
             updateScannerInstruction();
         }
     }
 
     function onScanFailure(error) {
-        // Ошибки сканирования кадров (игнорируем, пока QR не попадется в поле зрения)
+        // Пропуск кадров
     }
 
     function stopCameraAndShowResults() {
         if (html5QrCode) {
             html5QrCode.stop().then(() => {
                 showResults();
-            }).catch(err => {
+            }).catch(() => {
                 showResults();
             });
         } else {
@@ -357,7 +493,6 @@ background-position: center;
         switchScreen('screen-home');
     }
 
-    // Запуск приложения
     renderHome();
 </script>
 
