@@ -9,19 +9,21 @@
     <style>
         :root {
             --bg-color: #120f1d;
-            --card-bg: rgba(30, 25, 50, 0.85); /* Полупрозрачный фон карточек */
-            --accent-gold: #d4af37;
-            --text-main: #f0f0f0;
-            --text-muted: #b0a8c0;
+            /* Полупрозрачность 50% для карточек */
+            --card-bg: rgba(30, 25, 50, 0.5); 
+            --accent-gold: #ffd700;
+            --text-main: #ffffff;
+            --text-muted: #d0c8e0;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            /* ПОДКЛЮЧЕН ВАШ ФОН fon menu.jpg */
-            background-image: linear-gradient(rgba(18, 15, 29, 0.70), rgba(18, 15, 29, 0.85)), url('fon menu.jpg');
+            /* Подключен фон без пробела */
+            background-image: url('fonmenu.jpg');
             background-size: cover;
             background-position: center;
+            background-repeat: no-repeat;
             background-attachment: fixed;
             color: var(--text-main);
             margin: 0;
@@ -34,9 +36,9 @@
             width: 100%;
             max-width: 480px;
             min-height: 100vh;
-            background: rgba(18, 15, 29, 0.5);
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(18, 15, 29, 0.35);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
             display: flex;
             flex-direction: column;
@@ -45,15 +47,16 @@
         header {
             text-align: center;
             padding: 20px;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            background: rgba(18, 15, 29, 0.5);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.4);
         }
 
         header h1 {
             color: var(--accent-gold);
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
         }
 
         .content {
@@ -69,49 +72,54 @@
             display: block;
         }
 
-        /* Карточки раскладов */
+        /* Полупрозрачные карточки раскладов (50%) */
         .spread-card {
             background: var(--card-bg);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+            border: 1px solid rgba(255, 215, 0, 0.4);
             border-radius: 12px;
-            padding: 15px;
+            padding: 16px;
             margin-bottom: 15px;
             cursor: pointer;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
-        .spread-card:hover {
+        .spread-card:hover, .spread-card:active {
             border-color: var(--accent-gold);
+            background: rgba(45, 38, 75, 0.65);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }
 
         .spread-card h3 {
-            margin: 0 0 5px 0;
+            margin: 0 0 6px 0;
             color: var(--accent-gold);
             font-size: 18px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
         .spread-card p {
             margin: 0;
             color: var(--text-muted);
             font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
 
         /* Кнопки */
         .btn {
-            background: linear-gradient(135deg, #e6c561, #b88e28);
+            background: linear-gradient(135deg, #ffd700, #caa000);
             color: #120f1d;
             border: none;
             width: 100%;
-            padding: 14px;
-            border-radius: 8px;
+            padding: 15px;
+            border-radius: 10px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             margin-top: 15px;
             text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             transition: all 0.2s ease;
         }
 
@@ -135,10 +143,10 @@
             padding: 15px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
             text-align: center;
             margin-bottom: 20px;
+            backdrop-filter: blur(5px);
         }
 
         .schema-img {
@@ -146,7 +154,7 @@
             height: auto;
             border-radius: 8px;
             margin-bottom: 15px;
-            border: 1px solid rgba(212, 175, 55, 0.4);
+            border: 1px solid rgba(255, 215, 0, 0.4);
         }
 
         /* Камера и сканер */
@@ -164,37 +172,41 @@
             font-size: 16px;
             color: var(--accent-gold);
             font-weight: bold;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
         }
 
         .success-banner {
-            background: rgba(40, 167, 69, 0.2);
+            background: rgba(40, 167, 69, 0.3);
             border: 1px solid #28a745;
-            color: #75b798;
-            padding: 10px;
+            color: #ffffff;
+            padding: 12px;
             border-radius: 8px;
             text-align: center;
             margin-top: 15px;
-            font-size: 14px;
+            font-size: 15px;
+            backdrop-filter: blur(4px);
         }
 
         /* Результаты */
         .result-item {
             background: var(--card-bg);
-            border-radius: 8px;
-            padding: 12px;
+            border-radius: 10px;
+            padding: 14px;
             margin-bottom: 12px;
             border-left: 4px solid var(--accent-gold);
+            backdrop-filter: blur(5px);
         }
 
         .result-item h4 {
             margin: 0 0 5px 0;
             color: var(--accent-gold);
+            font-size: 16px;
         }
 
         .result-item p {
             margin: 0;
             font-size: 14px;
-            color: var(--text-muted);
+            color: var(--text-main);
         }
     </style>
 </head>
@@ -209,18 +221,18 @@
         
         <!-- ЭКРАН 1: СПИСОК РАСКЛАДОВ -->
         <div id="screen-home" class="screen active">
-            <h2 style="font-size: 18px; margin-bottom: 15px;">Выберите тип расклада:</h2>
+            <h2 style="font-size: 18px; margin-bottom: 15px; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">Выберите тип расклада:</h2>
             <div id="spreads-list"></div>
         </div>
 
         <!-- ЭКРАН 2: СХЕМА РАСКЛАДА -->
         <div id="screen-schema" class="screen">
-            <h2 id="schema-title" style="color: var(--accent-gold); margin-top:0;">Название расклада</h2>
-            <p id="schema-desc" style="color: var(--text-muted); font-size: 14px;"></p>
+            <h2 id="schema-title" style="color: var(--accent-gold); margin-top:0; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">Название расклада</h2>
+            <p id="schema-desc" style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;"></p>
             
             <div class="schema-box">
                 <img id="schema-image" class="schema-img" src="" alt="Схема расклада" style="display: none;">
-                <p id="schema-positions-text" style="margin:0; font-size: 14px; text-align: left; line-height: 1.5; width: 100%;"></p>
+                <p id="schema-positions-text" style="margin:0; font-size: 14px; text-align: left; line-height: 1.6; width: 100%;"></p>
             </div>
 
             <button class="btn" onclick="startScanning()">Включить камеру и сканировать</button>
@@ -238,7 +250,7 @@
                     Карта успешно считана!
                 </div>
                 <button class="btn" id="btn-next-card" onclick="prepareNextCard()">
-                    Следующая карта
+                    Сканировать следующую карту
                 </button>
             </div>
 
@@ -247,7 +259,7 @@
 
         <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
         <div id="screen-results" class="screen">
-            <h2 style="color: var(--accent-gold); margin-top:0;">Результаты расклада</h2>
+            <h2 style="color: var(--accent-gold); margin-top:0; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">Результаты расклада</h2>
             <div id="results-container"></div>
             <button class="btn" onclick="goHome()">Новый расклад</button>
         </div>
@@ -265,64 +277,15 @@
         "TAROT_04_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, ответственность, стабильность." }
     };
 
-    // 2. СПИСОК РАСКЛАДОВ (Замените имена картинок на свои файлы, когда загрузите их в GitHub)
+    // 2. СПИСОК РАСКЛАДОВ
     const spreads = [
-        { 
-            id: 1, 
-            name: "Карта дня", 
-            count: 1, 
-            desc: "Энергия и совет на текущий день", 
-            schemaImage: "scheme_day.png", 
-            positions: ["Совет и энергия дня"] 
-        },
-        { 
-            id: 2, 
-            name: "Выбор", 
-            count: 1, 
-            desc: "Ответ на конкретный вопрос", 
-            schemaImage: "scheme_choice.png", 
-            positions: ["Ответ на вопрос"] 
-        },
-        { 
-            id: 3, 
-            name: "Три карты", 
-            count: 3, 
-            desc: "Классика: Прошлое, Настоящее, Будущее", 
-            schemaImage: "scheme_3_cards.png", 
-            positions: ["Прошлое", "Настоящее", "Будущее"] 
-        },
-        { 
-            id: 4, 
-            name: "Расклад на день", 
-            count: 5, 
-            desc: "Разбор дня по этапам", 
-            schemaImage: "scheme_day_5.png", 
-            positions: ["Утро", "День", "Вечер", "Совет", "Предупреждение"] 
-        },
-        { 
-            id: 5, 
-            name: "Что меня ждёт с этим человеком?", 
-            count: 6, 
-            desc: "Анализ отношений и перспектив", 
-            schemaImage: "scheme_love_6.png", 
-            positions: ["Его/ее мысли", "Чувства", "Истинные намерения", "Что скрывает", "К чему приведет", "Итог"] 
-        },
-        { 
-            id: 6, 
-            name: "Самопознание", 
-            count: 7, 
-            desc: "Глубинный психологический портрет", 
-            schemaImage: "scheme_self_7.png", 
-            positions: ["Кто я сейчас", "Мои страхи", "Мои таланты", "Отношение к миру", "Чему научиться", "Скрытые ресурсы", "Путь развития"] 
-        },
-        { 
-            id: 7, 
-            name: "Кельтский крест", 
-            count: 10, 
-            desc: "Классический подробный расклад", 
-            schemaImage: "scheme_celtic_10.png", 
-            positions: ["Суть ситуации", "Препятствие", "Прошлое", "Будущее", "Цель", "Ближайшее будущее", "Позиция спрашивающего", "Окружение", "Страхи", "Итог"] 
-        }
+        { id: 1, name: "Карта дня", count: 1, desc: "Энергия и совет на текущий день", schemaImage: "scheme_day.png", positions: ["Совет и энергия дня"] },
+        { id: 2, name: "Выбор", count: 1, desc: "Ответ на конкретный вопрос", schemaImage: "scheme_choice.png", positions: ["Ответ на вопрос"] },
+        { id: 3, name: "Три карты", count: 3, desc: "Классика: Прошлое, Настоящее, Будущее", schemaImage: "scheme_3_cards.png", positions: ["Прошлое", "Настоящее", "Будущее"] },
+        { id: 4, name: "Расклад на день", count: 5, desc: "Разбор дня по этапам", schemaImage: "scheme_day_5.png", positions: ["Утро", "День", "Вечер", "Совет", "Предупреждение"] },
+        { id: 5, name: "Что меня ждёт с этим человеком?", count: 6, desc: "Анализ отношений и перспектив", schemaImage: "scheme_love_6.png", positions: ["Его/ее мысли", "Чувства", "Истинные намерения", "Что скрывает", "К чему приведет", "Итог"] },
+        { id: 6, name: "Самопознание", count: 7, desc: "Глубинный психологический портрет", schemaImage: "scheme_self_7.png", positions: ["Кто я сейчас", "Мои страхи", "Мои таланты", "Отношение к миру", "Чему научиться", "Скрытые ресурсы", "Путь развития"] },
+        { id: 7, name: "Кельтский крест", count: 10, desc: "Классический подробный расклад", schemaImage: "scheme_celtic_10.png", positions: ["Суть ситуации", "Препятствие", "Прошлое", "Будущее", "Цель", "Ближайшее будущее", "Позиция спрашивающего", "Окружение", "Страхи", "Итог"] }
     ];
 
     let currentSpread = null;
@@ -412,14 +375,17 @@
 
         if (navigator.vibrate) navigator.vibrate(100);
 
+        if (html5QrCode) {
+            html5QrCode.pause(true);
+        }
+
         document.getElementById('scanned-card-info').innerText = `Считана карта для позиции "${currentSpread.positions[currentStep]}": ${cardData.name}`;
         
         const nextBtn = document.getElementById('btn-next-card');
         if (currentStep + 1 >= currentSpread.count) {
             nextBtn.innerText = "Посмотреть результаты расклада";
         } else {
-            const nextPosName = currentSpread.positions[currentStep + 1];
-            nextBtn.innerText = `Перейти к карте №${currentStep + 2} (${nextPosName})`;
+            nextBtn.innerText = `Сканировать следующую карту (${currentStep + 2}/${currentSpread.count})`;
         }
 
         document.getElementById('scan-next-container').style.display = 'block';
@@ -434,11 +400,14 @@
         } else {
             isWaitingForNext = false;
             updateScannerInstruction();
+            if (html5QrCode) {
+                html5QrCode.resume();
+            }
         }
     }
 
     function onScanFailure(error) {
-        // Пропуск кадров
+        // Пропуск кадров без QR
     }
 
     function stopCameraAndShowResults() {
