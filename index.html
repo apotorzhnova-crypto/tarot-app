@@ -203,7 +203,7 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Результаты с миниатюрами карт */
+        /* Результаты с картинками */
         .result-item {
             background: var(--card-bg);
             border-radius: 12px;
@@ -218,13 +218,14 @@
         }
 
         .result-thumb {
-            width: 85px;
-            height: 145px;
+            width: 90px;
+            height: 150px;
             object-fit: cover;
             border-radius: 6px;
             border: 1px solid var(--accent-gold);
             box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
             flex-shrink: 0;
+            background: #1a162b;
         }
 
         .result-content {
@@ -321,71 +322,90 @@
 </div>
 
 <script>
-    // 1. БАЗА ДАННЫХ КАРТ С ВАШИМИ ИЗОБРАЖЕНИЯМИ С GITHUB
+    // 1. БАЗА ДАННЫХ КАРТ (Ключи соответствуют кодам с QR)
     const tarotDatabase = {
-        "TAROT_00_FOOL": { 
+        "MAJOR_FOOL": { 
             name: "0. Шут (Дурак)", 
             meaning: "Новые начинания, спонтанность, риск, чистота восприятия.",
-            description: "Шут символизирует начало нового жизненного путешествия. Это чистый лист, отсутствие страха перед неизвестностью и готовность довериться судьбе.",
+            description: "Шут символизирует начало нового жизненного путешествия. Это чистый лист, отсутствие страха перед неизвестностью и готовность довериться судьбе. Карта призывает открыться новому опыту.",
             image: "MAJOR_FOOL.png"
         },
-        "TAROT_01_MAGICIAN": { 
+        "MAJOR_MAGICIAN": { 
             name: "1. Маг", 
             meaning: "Воля, мастерство, активное действие, реализация задуманного.",
-            description: "Маг обладает всеми ресурсами для достижения успеха. У вас есть все необходимые знания и инструменты. Время действовать и брать инициативу.",
+            description: "Маг обладает всеми ресурсами для достижения успеха. У вас есть все необходимые знания и инструменты. Время действовать, проявлять инициативу и брать управление жизнью в свои руки.",
             image: "MAJOR_MAGICIAN.png"
         },
-        "TAROT_02_HIGH_PRIESTESS": { 
+        "MAJOR_PRIESTESS": { 
             name: "2. Верховная Жрица", 
             meaning: "Интуиция, тайны, скрытые знания, подсознание, пауза.",
-            description: "Жрица указывает на необходимость прислушаться к внутреннему голосу. Сейчас время для наблюдения и доверия своей интуиции.",
+            description: "Жрица указывает на необходимость прислушаться к внутреннему голосу. Сейчас не время для активных действий — лучше занять позицию наблюдателя и довериться интуиции.",
             image: "MAJOR_PRIESTESS.png"
         },
-        "TAROT_03_EMPRESS": { 
+        "MAJOR_EMPRESS": { 
             name: "3. Императрица", 
             meaning: "Плодородие, изобилие, гармония, творчество, забота.",
-            description: "Символ материнской энергии, процветания и красоты. Проекты принесут плоды, наступает период комфорта и любви.",
+            description: "Символ материнской энергии, процветания и красоты. Ваши проекты принесут богатые плоды, а в жизни наступает период комфорта, любви и физического благополучия.",
             image: "MAJOR_EMPRESS.png"
         },
-        "TAROT_04_EMPEROR": { 
+        "MAJOR_EMPEROR": { 
             name: "4. Император", 
             meaning: "Структура, порядок, власть, дисциплина, стабильность.",
-            description: "Отвечает за контроль, закон и логику. Пора навести порядок в делах, установить четкие границы и проявить твердость.",
+            description: "Император отвечает за контроль, закон и логику. Пора навести порядок в делах, установить четкие границы и проявить твердость духа.",
             image: "MAJOR_EMPEROR.png"
         },
-        "TAROT_05_HIEROPHANT": { 
+        "MAJOR_HIEROPHANT": { 
             name: "5. Иерофант (Жрец)", 
             meaning: "Традиции, духовное наставничество, обучение, правила.",
-            description: "Символ мудрости, следования моральным принципам и духовного поиска. Указывает на важность учебы и традиций.",
+            description: "Символ мудрости, следования моральным принципам и духовного поиска. Карта указывает на важность обучения, уважения к традициям и поиску духовного наставника.",
             image: "MAJOR_HIEROPHANT.png"
         },
-        "TAROT_06_LOVERS": { 
+        "MAJOR_LOVERS": { 
             name: "6. Влюбленные", 
             meaning: "Выбор, партнерство, любовь, гармония, союз.",
-            description: "Символ глубокой связи, сердечного выбора и гармоничных отношений. Предстоит сделать важный шаг.",
+            description: "Символ глубокой эмоциональной связи, сердечного выбора и гармоничных отношений. Вам предстоит сделать важный выбор, слушая свое сердце.",
             image: "MAJOR_LOVERS.png"
         },
-        "TAROT_07_CHARIOT": { 
+        "MAJOR_CHARIOT": { 
             name: "7. Колесница", 
             meaning: "Победа, прорыв, движение вперед, целеустремленность.",
-            description: "Успех благодаря силе воли, дисциплине и контролю над обстоятельствами. Преодоление препятствий.",
+            description: "Успех благодаря силе воли, дисциплине и контролю над обстоятельствами. Преодоление любых препятствий и уверенный шаг к цели.",
             image: "MAJOR_CHARIOT.png"
         },
-        "TAROT_08_STRENGTH": { 
+        "MAJOR_STRENGTH": { 
             name: "8. Сила", 
             meaning: "Внутренняя сила, мужество, страсть, мягкое укрощение.",
-            description: "Победа над трудностями не грубой силой, а терпением, уверенностью и любовью.",
+            description: "Победа над трудностями и своими страхами не грубой силой, а терпением, стойкостью, уверенностью и внутренней гармонией.",
             image: "MAJOR_STRENGTH.png"
         },
-        "TAROT_09_HERMIT": { 
+        "MAJOR_HERMIT": { 
             name: "9. Отшельник", 
             meaning: "Поиск истины, одиночество по доброй воле, мудрость.",
-            description: "Время уединения для переосмысления жизни, погружения вглубь себя и поиска ответов внутри.",
+            description: "Время уединения для переосмысления жизни, погружения вглубь себя и поиска ответов на важные духовные вопросы.",
             image: "MAJOR_HERMIT.png"
         }
     };
 
-    const defaultCardImage = "https://upload.wikimedia.org/wikipedia/commons/5/54/Rider-Waite_tarot_deck_card_back.red.png";
+    // Функция умного поиска карты по зашифрованному в QR коду
+    function findCardData(scannedCode) {
+        if (!scannedCode) return null;
+        
+        const cleanCode = scannedCode.trim().toUpperCase();
+
+        // 1. Прямой поиск в базе
+        if (tarotDatabase[cleanCode]) {
+            return tarotDatabase[cleanCode];
+        }
+
+        // 2. Умный поиск (например, если сканируется TAROT_00_FOOL, FOOL или MAJOR_FOOL)
+        for (let key in tarotDatabase) {
+            if (cleanCode.includes(key) || key.includes(cleanCode)) {
+                return tarotDatabase[key];
+            }
+        }
+
+        return null;
+    }
 
     // 2. СПИСОК РАСКЛАДОВ
     const spreads = [
@@ -574,13 +594,15 @@
 
         isWaitingForNext = true;
 
-        let cardData = tarotDatabase[decodedText];
+        // Поиск информации о карте по считываемому коду
+        let cardData = findCardData(decodedText);
+
         if (!cardData) {
             cardData = { 
                 name: decodedText, 
-                meaning: "Распознанная карта", 
-                description: "Описание для данной карты находится в процессе заполнения.",
-                image: defaultCardImage
+                meaning: "Карта Таро", 
+                description: "Описание для этой карты находится в процессе дополнения.",
+                image: ""
             };
         }
 
@@ -623,7 +645,7 @@
     }
 
     function onScanFailure(error) {
-        // Кадры без QR
+        // Игнорируем кадры без QR
     }
 
     function stopCameraAndShowResults() {
@@ -656,16 +678,15 @@
             const div = document.createElement('div');
             div.className = 'result-item';
             
-            const cardImg = item.card.image || defaultCardImage;
-            const descText = item.card.description || "Описание временно отсутствует.";
+            const cardImgSrc = item.card.image ? item.card.image : 'logotaro.png';
 
             div.innerHTML = `
-                <img src="${cardImg}" alt="${item.card.name}" class="result-thumb">
+                <img src="${cardImgSrc}" alt="${item.card.name}" class="result-thumb" onerror="this.src='logotaro.png'">
                 <div class="result-content">
                     <h4>Позиция ${idx + 1}: ${item.position}</h4>
                     <div class="result-card-name">${item.card.name}</div>
                     <div class="result-meaning">Ключ: ${item.card.meaning}</div>
-                    <div class="result-description">${descText}</div>
+                    <div class="result-description">${item.card.description}</div>
                 </div>
             `;
             container.appendChild(div);
