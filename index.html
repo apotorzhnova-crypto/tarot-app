@@ -9,7 +9,6 @@
     <style>
         :root {
             --bg-color: #120f1d;
-            /* Полупрозрачность 50% для карточек */
             --card-bg: rgba(30, 25, 50, 0.5); 
             --accent-gold: #ffd700;
             --text-main: #ffffff;
@@ -19,7 +18,6 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            /* Подключен фон без пробела */
             background-image: url('fonmenu.jpg');
             background-size: cover;
             background-position: center;
@@ -46,17 +44,22 @@
 
         header {
             text-align: center;
-            padding: 20px;
+            padding: 15px 20px;
             background: rgba(18, 15, 29, 0.5);
             border-bottom: 1px solid rgba(255, 215, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        header h1 {
-            color: var(--accent-gold);
-            margin: 0;
-            font-size: 26px;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        /* Стиль круглой иконки-логотипа */
+        .app-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
         }
 
         .content {
@@ -135,10 +138,10 @@
             box-shadow: none;
         }
 
-        /* Блок схемы расклада */
+        /* Блок схемы расклада и описания */
         .schema-box {
             background: var(--card-bg);
-            border: 1px dashed var(--accent-gold);
+            border: 1px solid rgba(255, 215, 0, 0.4);
             border-radius: 12px;
             padding: 15px;
             display: flex;
@@ -155,6 +158,19 @@
             border-radius: 8px;
             margin-bottom: 15px;
             border: 1px solid rgba(255, 215, 0, 0.4);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+
+        .schema-description-block {
+            background: rgba(18, 15, 29, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-main);
+            border-left: 3px solid var(--accent-gold);
         }
 
         /* Камера и сканер */
@@ -214,7 +230,8 @@
 
 <div class="container">
     <header>
-        <h1>Таро Ключ</h1>
+        <!-- КРУГЛЫЙ ЛОГОТИП ВМЕСТО НАЗВАНИЯ -->
+        <img src="logotaro.png" alt="Таро Ключ" class="app-logo">
     </header>
 
     <div class="content">
@@ -228,11 +245,14 @@
         <!-- ЭКРАН 2: СХЕМА РАСКЛАДА -->
         <div id="screen-schema" class="screen">
             <h2 id="schema-title" style="color: var(--accent-gold); margin-top:0; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">Название расклада</h2>
-            <p id="schema-desc" style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;"></p>
             
             <div class="schema-box">
                 <img id="schema-image" class="schema-img" src="" alt="Схема расклада" style="display: none;">
-                <p id="schema-positions-text" style="margin:0; font-size: 14px; text-align: left; line-height: 1.6; width: 100%;"></p>
+                
+                <div class="schema-description-block">
+                    <p id="schema-about-text" style="margin-top:0; font-style: italic; color: var(--accent-gold);"></p>
+                    <p id="schema-positions-text" style="margin-bottom:0;"></p>
+                </div>
             </div>
 
             <button class="btn" onclick="startScanning()">Включить камеру и сканировать</button>
@@ -271,199 +291,4 @@
     // 1. БАЗА ДАННЫХ КАРТ
     const tarotDatabase = {
         "TAROT_00_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, доверие к вселенной." },
-        "TAROT_01_MAGICIAN": { name: "1. Маг", meaning: "Воля, мастерство, активное действие, уверенность." },
-        "TAROT_02_HIGH_PRIESTESS": { name: "2. Верховная Жрица", meaning: "Интуиция, тайны, скрытые знания, подсознание." },
-        "TAROT_03_EMPRESS": { name: "3. Императрица", meaning: "Плодородие, изобилие, материнство, творчество, забота." },
-        "TAROT_04_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, ответственность, стабильность." }
-    };
-
-    // 2. СПИСОК РАСКЛАДОВ
-    const spreads = [
-        { id: 1, name: "Карта дня", count: 1, desc: "Энергия и совет на текущий день", schemaImage: "scheme_day.png", positions: ["Совет и энергия дня"] },
-        { id: 2, name: "Выбор", count: 1, desc: "Ответ на конкретный вопрос", schemaImage: "scheme_choice.png", positions: ["Ответ на вопрос"] },
-        { id: 3, name: "Три карты", count: 3, desc: "Классика: Прошлое, Настоящее, Будущее", schemaImage: "scheme_3_cards.png", positions: ["Прошлое", "Настоящее", "Будущее"] },
-        { id: 4, name: "Расклад на день", count: 5, desc: "Разбор дня по этапам", schemaImage: "scheme_day_5.png", positions: ["Утро", "День", "Вечер", "Совет", "Предупреждение"] },
-        { id: 5, name: "Что меня ждёт с этим человеком?", count: 6, desc: "Анализ отношений и перспектив", schemaImage: "scheme_love_6.png", positions: ["Его/ее мысли", "Чувства", "Истинные намерения", "Что скрывает", "К чему приведет", "Итог"] },
-        { id: 6, name: "Самопознание", count: 7, desc: "Глубинный психологический портрет", schemaImage: "scheme_self_7.png", positions: ["Кто я сейчас", "Мои страхи", "Мои таланты", "Отношение к миру", "Чему научиться", "Скрытые ресурсы", "Путь развития"] },
-        { id: 7, name: "Кельтский крест", count: 10, desc: "Классический подробный расклад", schemaImage: "scheme_celtic_10.png", positions: ["Суть ситуации", "Препятствие", "Прошлое", "Будущее", "Цель", "Ближайшее будущее", "Позиция спрашивающего", "Окружение", "Страхи", "Итог"] }
-    ];
-
-    let currentSpread = null;
-    let currentStep = 0;
-    let scannedCards = [];
-    let html5QrCode = null;
-    let isWaitingForNext = false;
-
-    function renderHome() {
-        const listEl = document.getElementById('spreads-list');
-        listEl.innerHTML = '';
-        spreads.forEach(spread => {
-            const card = document.createElement('div');
-            card.className = 'spread-card';
-            card.innerHTML = `<h3>${spread.name} (${spread.count} карт)</h3><p>${spread.desc}</p>`;
-            card.onclick = () => selectSpread(spread);
-            listEl.appendChild(card);
-        });
-    }
-
-    function selectSpread(spread) {
-        currentSpread = spread;
-        currentStep = 0;
-        scannedCards = [];
-
-        document.getElementById('schema-title').innerText = spread.name;
-        document.getElementById('schema-desc').innerText = spread.desc;
-        
-        const imgEl = document.getElementById('schema-image');
-        if (spread.schemaImage) {
-            imgEl.src = spread.schemaImage;
-            imgEl.style.display = 'block';
-        } else {
-            imgEl.style.display = 'none';
-        }
-
-        let posText = "<b>Позиции карт:</b><br>";
-        spread.positions.forEach((pos, idx) => {
-            posText += `${idx + 1}. ${pos}<br>`;
-        });
-        document.getElementById('schema-positions-text').innerHTML = posText;
-
-        switchScreen('screen-schema');
-    }
-
-    function startScanning() {
-        switchScreen('screen-scanner');
-        document.getElementById('scan-next-container').style.display = 'none';
-        isWaitingForNext = false;
-        
-        html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 220, height: 220 } };
-        
-        updateScannerInstruction();
-
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config, 
-            onScanSuccess, 
-            onScanFailure
-        ).catch(err => {
-            alert("Не удалось запустить камеру. Убедитесь, что разрешили доступ к ней.");
-            goHome();
-        });
-    }
-
-    function updateScannerInstruction() {
-        const posName = currentSpread.positions[currentStep];
-        document.getElementById('scanner-instruction').innerHTML = 
-            `Сканируйте карту [${currentStep + 1} из ${currentSpread.count}]<br><span style="color:#fff; font-size:14px;">Позиция: "${posName}"</span>`;
-    }
-
-    function onScanSuccess(decodedText, decodedResult) {
-        if (isWaitingForNext) return;
-
-        isWaitingForNext = true;
-
-        let cardData = tarotDatabase[decodedText];
-        if (!cardData) {
-            cardData = { name: decodedText, meaning: "Карта из расклада." };
-        }
-
-        scannedCards.push({
-            position: currentSpread.positions[currentStep],
-            card: cardData
-        });
-
-        if (navigator.vibrate) navigator.vibrate(100);
-
-        if (html5QrCode) {
-            html5QrCode.pause(true);
-        }
-
-        document.getElementById('scanned-card-info').innerText = `Считана карта для позиции "${currentSpread.positions[currentStep]}": ${cardData.name}`;
-        
-        const nextBtn = document.getElementById('btn-next-card');
-        if (currentStep + 1 >= currentSpread.count) {
-            nextBtn.innerText = "Посмотреть результаты расклада";
-        } else {
-            nextBtn.innerText = `Сканировать следующую карту (${currentStep + 2}/${currentSpread.count})`;
-        }
-
-        document.getElementById('scan-next-container').style.display = 'block';
-    }
-
-    function prepareNextCard() {
-        currentStep++;
-        document.getElementById('scan-next-container').style.display = 'none';
-
-        if (currentStep >= currentSpread.count) {
-            stopCameraAndShowResults();
-        } else {
-            isWaitingForNext = false;
-            updateScannerInstruction();
-            if (html5QrCode) {
-                html5QrCode.resume();
-            }
-        }
-    }
-
-    function onScanFailure(error) {
-        // Пропуск кадров без QR
-    }
-
-    function stopCameraAndShowResults() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                showResults();
-            }).catch(() => {
-                showResults();
-            });
-        } else {
-            showResults();
-        }
-    }
-
-    function stopScanningAndBack() {
-        if (html5QrCode) {
-            html5QrCode.stop().finally(() => {
-                goHome();
-            });
-        } else {
-            goHome();
-        }
-    }
-
-    function showResults() {
-        const container = document.getElementById('results-container');
-        container.innerHTML = '';
-
-        scannedCards.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'result-item';
-            div.innerHTML = `
-                <h4>Позиция ${idx + 1}: ${item.position}</h4>
-                <p><b>Карта:</b> ${item.card.name}</p>
-                <p style="margin-top: 5px;"><i>Значение:</i> ${item.card.meaning}</p>
-            `;
-            container.appendChild(div);
-        });
-
-        switchScreen('screen-results');
-    }
-
-    function switchScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-        document.getElementById(screenId).classList.add('active');
-    }
-
-    function goHome() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().catch(() => {});
-        }
-        switchScreen('screen-home');
-    }
-
-    renderHome();
-</script>
-
-</body>
-</html>
+        "TAROT_01_MAGICIAN
