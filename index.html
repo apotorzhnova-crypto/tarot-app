@@ -585,22 +585,55 @@
         isWaitingForNext = false;
         
         html5QrCode = new Html5Qrcode("reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        
+        const config = { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 } 
+        };
         
         updateScannerInstruction();
 
-        const cameraConfig = {
-            facingMode: "environment",
-            advanced: [{ focusMode: "continuous" }]
-        };
+        // Сначала запрашиваем конкретно заднюю камеру (environment)
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                // Ищем заднюю камеру
+                let rearCameraId = devices[devices.length - 1].id;
+                for (let device of devices) {
+                    if (device.label.toLowerCase().contains('back') || 
+                        device.label.toLowerCase().contains('задн') || 
+                        device.label.toLowerCase().contains('rear')) {
+                        rearCameraId = device.id;
+                        break;
+                    }
+                }
 
-        html5QrCode.start(cameraConfig, config, onScanSuccess, onScanFailure).catch(err => {
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure).catch(innerErr => {
-                alert("Не удалось запустить камеру. Используйте ручной выбор карт.");
-            });
+                html5QrCode.start(
+                    rearCameraId, 
+                    config, 
+                    onScanSuccess, 
+                    onScanFailure
+                ).catch(err => {
+                    fallbackStart(config);
+                });
+            } else {
+                fallbackStart(config);
+            }
+        }).catch(err => {
+            fallbackStart(config);
         });
     }
 
+    function fallbackStart(config) {
+        html5QrCode.start(
+            { facingMode: "environment" }, 
+            config, 
+            onScanSuccess, 
+            onScanFailure
+        ).catch(err => {
+            alert("Не удалось запустить камеру. Проверьте, разрешен ли доступ к камере в настройках браузера и используется ли защищенное соединение (HTTPS).");
+            goHome();
+        });
+    }
     function updateScannerInstruction() {
         const posName = currentSpread.positions[currentStep];
         document.getElementById('scanner-instruction').innerHTML = 
