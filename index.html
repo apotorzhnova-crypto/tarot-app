@@ -171,6 +171,7 @@
 
         #reader {
             width: 100%;
+            min-height: 250px;
             border-radius: 12px;
             overflow: hidden;
             border: 2px solid var(--accent-gold);
@@ -374,8 +375,8 @@
             <h2 style="color: var(--accent-gold); margin-top:0; text-align:center;">Способ ввода карт</h2>
             <p style="text-align:center; color: var(--text-muted); margin-bottom:20px;">Как вы хотите вносить карты расклада?</p>
 
-            <button class="btn" onclick="startScanning()">📷 1. Сканировать камерой</button>
-            <button class="btn btn-secondary" onclick="openManualSelection()">📜 2. Выбрать карту вручную</button>
+            <button class="btn" onclick="startScanningFlow()">📷 1. Сканировать камерой</button>
+            <button class="btn btn-secondary" onclick="openManualSelectionFlow()">📜 2. Выбрать карту вручную</button>
             
             <button class="btn btn-secondary" style="margin-top: 25px;" onclick="switchScreen('screen-schema')">⬅️ Назад к описанию</button>
         </div>
@@ -395,7 +396,8 @@
                 </button>
             </div>
 
-            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="stopCameraAndBackToChoose()">⬅️ Назад к выбору способа</button>
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="openManualSelection()">📜 Выбрать карту вручную</button>
+            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="stopCameraAndBackToChoose()">⬅️ Назад к выбору способа</button>
         </div>
 
         <!-- ЭКРАН 3.1: РУЧНОЙ ВЫБОР КАРТ -->
@@ -552,6 +554,7 @@
     let scannedCards = [];
     let html5QrCode = null;
     let isWaitingForNext = false;
+    let lastInputMode = 'scanner'; // Запоминаем режим: 'scanner' или 'manual'
 
     function renderHome() {
         const listEl = document.getElementById('spreads-list');
@@ -591,13 +594,21 @@
     }
 
     function openChooseMode() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().catch(() => {});
-        }
+        stopCamera();
         switchScreen('screen-choose-mode');
     }
 
-    async function startScanning() {
+    function startScanningFlow() {
+        lastInputMode = 'scanner';
+        startScanning();
+    }
+
+    function openManualSelectionFlow() {
+        lastInputMode = 'manual';
+        openManualSelection();
+    }
+
+    async function stopCamera() {
         if (html5QrCode) {
             try {
                 if (html5QrCode.isScanning) {
@@ -608,6 +619,10 @@
                 console.log("Очистка предыдущего сканера:", e);
             }
         }
+    }
+
+    async function startScanning() {
+        await stopCamera();
 
         switchScreen('screen-scanner');
         document.getElementById('scan-next-container').style.display = 'none';
@@ -618,16 +633,10 @@
         
         updateScannerInstruction();
 
-        const cameraConfig = {
-            facingMode: "environment",
-            advanced: [{ focusMode: "continuous" }]
-        };
-
-        html5QrCode.start(cameraConfig, config, onScanSuccess, onScanFailure).catch(err => {
-            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure).catch(innerErr => {
-                alert("Не удалось запустить камеру. Проверьте разрешения или используйте ручной выбор карт.");
-                openChooseMode();
-            });
+        // Стандартная конфигурация задней камеры для максимальной совместимости
+        html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure).catch(err => {
+            console.error("Ошибка камеры:", err);
+            alert("Камера недоступна. Вы можете выбрать карту вручную из списка.");
         });
     }
 
@@ -688,10 +697,8 @@
 
     function onScanFailure(error) {}
 
-    function openManualSelection() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().catch(() => {});
-        }
+    async function openManualSelection() {
+        await stopCamera();
         renderManualList();
         switchScreen('screen-manual');
     }
@@ -730,13 +737,7 @@
                         <div class="manual-name">${card.name}</div>
                     `;
                     itemEl.onclick = () => {
-                        registerCard(card);
-                        // Если карта выбрана вручную, сразу переходим к следующему шагу или результатам
-                        if (currentStep >= currentSpread.count) {
-                            showResults();
-                        } else {
-                            openManualSelection(); // Обновляем список для следующей позиции
-                        }
+                        registerCardManual(card);
                     };
                     gridEl.appendChild(itemEl);
                 }
@@ -745,25 +746,34 @@
         });
     }
 
-    function stopCameraAndBackToChoose() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                html5QrCode.clear();
-                openChooseMode();
-            }).catch(() => {
-                openChooseMode();
-            });
+    function registerCardManual(cardData) {
+        scannedCards.push({
+            position: currentSpread.positions[currentStep],
+            card: cardData
+        });
+
+        if (navigator.vibrate) navigator.vibrate(100);
+        currentStep++;
+
+        if (currentStep >= currentSpread.count) {
+            showResults();
         } else {
-            openChooseMode();
+            if (lastInputMode === 'scanner') {
+                startScanning();
+            } else {
+                openManualSelection();
+            }
         }
     }
 
-    function stopCameraAndShowResults() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().then(() => showResults()).catch(() => showResults());
-        } else {
-            showResults();
-        }
+    async function stopCameraAndBackToChoose() {
+        await stopCamera();
+        openChooseMode();
+    }
+
+    async function stopCameraAndShowResults() {
+        await stopCamera();
+        showResults();
     }
 
     function showResults() {
@@ -830,9 +840,7 @@
     }
 
     function goHome() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().catch(() => {});
-        }
+        stopCamera();
         switchScreen('screen-home');
     }
 
