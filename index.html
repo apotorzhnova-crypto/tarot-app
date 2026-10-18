@@ -654,37 +654,52 @@
         
         html5QrCode = new Html5Qrcode("reader");
         
-        // Настройка контейнера и зоны сканирования под макросъемку
         const config = { 
-            fps: 15, 
-            qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
+            fps: 10, 
+            qrbox: { width: 250, height: 250 } 
         };
         
         updateScannerInstruction();
 
-        // Запрос камеры с принудительным непрерывным автофокусом и разрешением HD
-        const cameraConfig = {
-            facingMode: "environment",
-            advanced: [{ focusMode: "continuous" }]
-        };
+        // Сначала запрашиваем конкретно заднюю камеру (environment)
+        Html5Qrcode.getCameras().then(devices => {
+            if (devices && devices.length) {
+                // Ищем заднюю камеру
+                let rearCameraId = devices[devices.length - 1].id;
+                for (let device of devices) {
+                    if (device.label.toLowerCase().contains('back') || 
+                        device.label.toLowerCase().contains('задн') || 
+                        device.label.toLowerCase().contains('rear')) {
+                        rearCameraId = device.id;
+                        break;
+                    }
+                }
 
+                html5QrCode.start(
+                    rearCameraId, 
+                    config, 
+                    onScanSuccess, 
+                    onScanFailure
+                ).catch(err => {
+                    fallbackStart(config);
+                });
+            } else {
+                fallbackStart(config);
+            }
+        }).catch(err => {
+            fallbackStart(config);
+        });
+    }
+
+    function fallbackStart(config) {
         html5QrCode.start(
-            cameraConfig, 
+            { facingMode: "environment" }, 
             config, 
             onScanSuccess, 
             onScanFailure
         ).catch(err => {
-            // Запасной вариант запуска, если расширенный конфиг не поддерживается устройством
-            html5QrCode.start(
-                { facingMode: "environment" },
-                config,
-                onScanSuccess,
-                onScanFailure
-            ).catch(innerErr => {
-                alert("Не удалось запустить камеру. Убедитесь, что разрешили доступ к ней.");
-                goHome();
-            });
+            alert("Не удалось запустить камеру. Проверьте, разрешен ли доступ к камере в настройках браузера и используется ли защищенное соединение (HTTPS).");
+            goHome();
         });
     }
 
