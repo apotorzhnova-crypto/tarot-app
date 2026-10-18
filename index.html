@@ -600,11 +600,24 @@
         switchScreen('screen-choose-mode');
     }
 
-    function startScanning() {
+   async function startScanning() {
+        // Если сканер уже работал, сначала принудительно останавливаем его
+        if (html5QrCode) {
+            try {
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+                await html5QrCode.clear();
+            } catch (e) {
+                console.log("Очистка предыдущего сканера:", e);
+            }
+        }
+
         switchScreen('screen-scanner');
         document.getElementById('scan-next-container').style.display = 'none';
         isWaitingForNext = false;
         
+        // Создаем новый экземпляр сканера
         html5QrCode = new Html5Qrcode("reader");
         const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         
@@ -615,9 +628,11 @@
             advanced: [{ focusMode: "continuous" }]
         };
 
+        // Запуск с авто-фокусом, при неудаче — запасной вариант
         html5QrCode.start(cameraConfig, config, onScanSuccess, onScanFailure).catch(err => {
             html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure).catch(innerErr => {
-                alert("Не удалось запустить камеру. Используйте ручной выбор карт.");
+                alert("Не удалось запустить камеру. Проверьте разрешения или используйте ручной выбор карт.");
+                openChooseMode();
             });
         });
     }
@@ -731,8 +746,13 @@
     }
 
     function stopCameraAndBackToChoose() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().finally(() => openChooseMode());
+        if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+                openChooseMode();
+            }).catch(() => {
+                openChooseMode();
+            });
         } else {
             openChooseMode();
         }
