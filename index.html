@@ -352,7 +352,7 @@
             <div id="spreads-list"></div>
         </div>
 
-        <!-- ЭКРАН 2: СХЕМА РАСКЛАДА -->
+        <!-- ЭКРАН 2: ОПИСАНИЕ И СХЕМА РАСКЛАДА -->
         <div id="screen-schema" class="screen">
             <h2 id="schema-title" style="color: var(--accent-gold); margin-top:0; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">Название расклада</h2>
             
@@ -365,8 +365,20 @@
                 </div>
             </div>
 
-            <button class="btn" onclick="startScanning()">Включить камеру и сканировать</button>
-            <button class="btn btn-secondary" onclick="goHome()">Назад к выбору</button>
+            <!-- Две кнопки: Начать расклад и Назад к выбору -->
+            <button class="btn" onclick="openChooseMode()">1. Начать расклад</button>
+            <button class="btn btn-secondary" onclick="goHome()">2. Назад к выбору</button>
+        </div>
+
+        <!-- ЭКРАН 2.1: ВЫБОР СПОСОБА ВВОДА КАРТ -->
+        <div id="screen-choose-mode" class="screen">
+            <h2 style="color: var(--accent-gold); margin-top:0; text-align:center;">Способ ввода карт</h2>
+            <p style="text-align:center; color: var(--text-muted); margin-bottom:20px;">Как вы хотите вносить карты расклада?</p>
+
+            <button class="btn" onclick="startScanning()">📷 1. Сканировать камерой</button>
+            <button class="btn btn-secondary" onclick="openManualSelection()">📜 2. Выбрать карту вручную</button>
+            
+            <button class="btn btn-secondary" style="margin-top: 25px;" onclick="switchScreen('screen-schema')">⬅️ Назад к описанию</button>
         </div>
 
         <!-- ЭКРАН 3: СКАНЕР КАМЕРЫ -->
@@ -384,15 +396,17 @@
                 </button>
             </div>
 
-            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="openManualSelection()">📜 Выбрать карту вручную</button>
-            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="stopScanningAndBack()">Отмена</button>
+            <!-- Кнопка Назад (возвращает к выбору способа ввода) -->
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="stopCameraAndBackToChoose()">⬅️ Назад к выбору способа</button>
         </div>
 
         <!-- ЭКРАН 3.1: РУЧНОЙ ВЫБОР КАРТ -->
         <div id="screen-manual" class="screen">
-            <h2 style="color: var(--accent-gold); margin-top:0; font-size:18px;">Выберите карту из списка:</h2>
+            <div class="scanner-status" id="manual-instruction">Выберите карту для позиции</div>
             <div id="manual-cards-container"></div>
-            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="closeManualSelection()">Назад к камере</button>
+            
+            <!-- Кнопка Назад (возвращает к выбору способа ввода) -->
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="openChooseMode()">⬅️ Назад к выбору способа</button>
         </div>
 
         <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
@@ -415,7 +429,7 @@
 </div>
 
 <script>
-    // 1. БАЗА ДАННЫХ 78 КАРТ С АЛИАСАМИ (ФОРМАТ С _01 И КАРТИНКАМИ БЕЗ НУЛЕЙ ДЛЯ 2-10)
+    // 1. БАЗА ДАННЫХ 78 КАРТ С АЛИАСАМИ
     const tarotDatabase = {
         // === СТАРШИЕ АРКАНЫ ===
         "MAJOR_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, чистота восприятия.", description: "Шут символизирует начало нового жизненного путешествия. Это чистый лист, отсутствие страха перед неизвестностью и готовность довериться судьбе.", image: "MAJOR_FOOL.png", category: "major", aliases: ["FOOL", "00_FOOL", "0_FOOL", "ШУТ", "ДУРАК"] },
@@ -441,7 +455,7 @@
         "MAJOR_JUDGEMENT": { name: "20. Страшный Суд", meaning: "Пробуждение, призвание, освобождение, итоги.", description: "Время подведения итогов и перехода на качественно новый уровень жизни.", image: "MAJOR_JUDGEMENT.png", category: "major", aliases: ["JUDGEMENT", "20_JUDGEMENT", "СУД"] },
         "MAJOR_WORLD": { name: "21. Мир", meaning: "Завершение пути, целостность, гармония, успех, интеграция.", description: "Высшая точка достижения целей. Завершение этапа и гармония с миром.", image: "MAJOR_WORLD.png", category: "major", aliases: ["WORLD", "21_WORLD", "МИР"] },
 
-        // === ЖЕЗЛЫ (WANDS) ===
+        // === ЖЕЗЛЫ ===
         "MINOR_WANDS_ACE": { name: "Туз Жезлов", meaning: "Инициатива, новая идея, вспышка страсти, вдохновение.", description: "Мощный импульс энергии. Появление перспективной идеи и нового начинания.", image: "WANDS_ACE.png", category: "wands", aliases: ["MINOR_WANDS_ACE", "WANDS_1", "ACE_OF_WANDS", "ТУЗ_ЖЕЗЛОВ"] },
         "WANDS_02": { name: "2 Жезлов", meaning: "Планирование, выбор пути, амбиции, расширение горизонтов.", description: "Первый успех достигнут, пора строить долгосрочные планы развития.", image: "WANDS_2.png", category: "wands", aliases: ["WANDS_2", "2_OF_WANDS", "ДВОЙКА_ЖЕЗЛОВ"] },
         "WANDS_03": { name: "3 Жезлов", meaning: "Уверенное движение, партнерство, первые результаты.", description: "Замыслы приносят первые плоды. Время уверенно смотреть в будущее.", image: "WANDS_3.png", category: "wands", aliases: ["WANDS_3", "3_OF_WANDS", "ТРОЙКА_ЖЕЗЛОВ"] },
@@ -457,7 +471,7 @@
         "WANDS_QUEEN": { name: "Королева Жезлов", meaning: "Харизма, уверенность, независимость, вдохновение.", description: "Энергичная женщина. Умение вести за собой и создавать теплую атмосферу.", image: "WANDS_QUEEN.png", category: "wands", aliases: ["QUEEN_OF_WANDS", "КОРОЛЕВА_ЖЕЗЛОВ"] },
         "WANDS_KING": { name: "Король Жезлов", meaning: "Лидерство, авторитет, предпринимательский дух.", description: "Амбициозный лидер. Проявляйте решительность и масштабное мышление.", image: "WANDS_KING.png", category: "wands", aliases: ["KING_OF_WANDS", "КОРОЛЬ_ЖЕЗЛОВ"] },
 
-        // === КУБКИ (CUPS) ===
+        // === КУБКИ ===
         "MINOR_CUPS_ACE": { name: "Туз Кубков", meaning: "Любовь, искренние эмоции, вдохновение, счастье.", description: "Начало новой любви, глубокой дружбы или эмоционального исцеления.", image: "CUPS_ACE.png", category: "cups", aliases: ["MINOR_CUPS_ACE", "CUPS_1", "ACE_OF_CUPS", "ТУЗ_КУБКОВ"] },
         "CUPS_02": { name: "2 Кубков", meaning: "Взаимность, симпатия, партнерство, гармония.", description: "Гармоничный союз двух сердец. Взаимопонимание в любви или делах.", image: "CUPS_2.png", category: "cups", aliases: ["CUPS_2", "2_OF_CUPS", "ДВОЙКА_КУБКОВ"] },
         "CUPS_03": { name: "3 Кубков", meaning: "Праздник, дружба, совместная радость, поддержка.", description: "Радостная встреча с друзьями, празднование успеха в кругу единомышленников.", image: "CUPS_3.png", category: "cups", aliases: ["CUPS_3", "3_OF_CUPS", "ТРОЙКА_КУБКОВ"] },
@@ -473,7 +487,7 @@
         "CUPS_QUEEN": { name: "Королева Кубков", meaning: "Эмпатия, мягкость, забота, развитая интуиция.", description: "Чуткая женщина. Умение слушать, сопереживать и дарить душевное тепло.", image: "CUPS_QUEEN.png", category: "cups", aliases: ["QUEEN_OF_CUPS", "КОРОЛЕВА_КУБКОВ"] },
         "CUPS_KING": { name: "Король Кубков", meaning: "Эмоциональная зрелость, мудрость, поддержка.", description: "Человек, умеющий контролировать эмоции и давать мудрые советы.", image: "CUPS_KING.png", category: "cups", aliases: ["KING_OF_CUPS", "КОРОЛЬ_КУБКОВ"] },
 
-        // === МЕЧИ (SWORDS) ===
+        // === МЕЧИ ===
         "MINOR_SWORDS_ACE": { name: "Туз Мечей", meaning: "Ясность ума, прорыв, правда, важное решение.", description: "Озарение, отсечение лишнего. Ситуация становится кристально понятной.", image: "SWORDS_ACE.png", category: "swords", aliases: ["MINOR_SWORDS_ACE", "SWORDS_1", "ACE_OF_SWORDS", "ТУЗ_МЕЧЕЙ"] },
         "SWORDS_02": { name: "2 Мечей", meaning: "Замкнутость, сомнения, компромисс, закрытые глаза.", description: "Нежелание видеть правду или принимать сложное решение.", image: "SWORDS_2.png", category: "swords", aliases: ["SWORDS_2", "2_OF_SWORDS", "ДВОЙКА_МЕЧЕЙ"] },
         "SWORDS_03": { name: "3 Мечей", meaning: "Боль, разбитое сердце, разочарование, печальная правда.", description: "Эмоциональная боль или болезненное осознание истины.", image: "SWORDS_3.png", category: "swords", aliases: ["SWORDS_3", "3_OF_SWORDS", "ТРОЙКА_МЕЧЕЙ"] },
@@ -489,7 +503,7 @@
         "SWORDS_QUEEN": { name: "Королева Мечей", meaning: "Проницательность, независимость, логика, честность.", description: "Независимая женщина. Умение отсекать эмоции ради истины.", image: "SWORDS_QUEEN.png", category: "swords", aliases: ["QUEEN_OF_SWORDS", "КОРОЛЕВА_МЕЧЕЙ"] },
         "SWORDS_KING": { name: "Король Мечей", meaning: "Аналитический ум, авторитет, объективность.", description: "Профессионал, опирающийся на факты и закон.", image: "SWORDS_KING.png", category: "swords", aliases: ["KING_OF_SWORDS", "КОРОЛЬ_МЕЧЕЙ"] },
 
-        // === ПЕНТАКЛИ (PENTACLES) ===
+        // === ПЕНТАКЛИ ===
         "MINOR_PENTACLES_ACE": { name: "Туз Пентаклей", meaning: "Материальный шанс, финансовый успех, подарок судьбы.", description: "Возможность для заработка, покупка или успешный старт бизнеса.", image: "PENTACLES_ACE.png", category: "pentacles", aliases: ["MINOR_PENTACLES_ACE", "PENTACLES_1", "ACE_OF_PENTACLES", "ТУЗ_ПЕНТАКЛЕЙ"] },
         "PENTACLES_02": { name: "2 Пентаклей", meaning: "Балансирование, гибкость, суета, совмещение дел.", description: "Умение справляться с несколькими делами одновременно. Сохраняйте гибкость.", image: "PENTACLES_2.png", category: "pentacles", aliases: ["PENTACLES_2", "2_OF_PENTACLES", "ДВОЙКА_ПЕНТАКЛЕЙ"] },
         "PENTACLES_03": { name: "3 Пентаклей", meaning: "Мастерство, командная работа, рост доходов, учеба.", description: "Признание профессионализма и продуктивное сотрудничество.", image: "PENTACLES_3.png", category: "pentacles", aliases: ["PENTACLES_3", "3_OF_PENTACLES", "ТРОЙКА_ПЕНТАКЛЕЙ"] },
@@ -577,6 +591,13 @@
         document.getElementById('schema-positions-text').innerHTML = posText;
 
         switchScreen('screen-schema');
+    }
+
+    function openChooseMode() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().catch(() => {});
+        }
+        switchScreen('screen-choose-mode');
     }
 
     function startScanning() {
@@ -668,13 +689,12 @@
         switchScreen('screen-manual');
     }
 
-    function closeManualSelection() {
-        startScanning();
-    }
-
     function renderManualList() {
         const container = document.getElementById('manual-cards-container');
         container.innerHTML = '';
+
+        const posName = currentSpread.positions[currentStep];
+        document.getElementById('manual-instruction').innerText = `Карта ${currentStep + 1} из ${currentSpread.count}: "${posName}"`;
 
         const categories = [
             { id: 'major', title: '⭐ Старшие Арканы' },
@@ -710,19 +730,19 @@
         });
     }
 
+    function stopCameraAndBackToChoose() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().finally(() => openChooseMode());
+        } else {
+            openChooseMode();
+        }
+    }
+
     function stopCameraAndShowResults() {
         if (html5QrCode && html5QrCode.isScanning) {
             html5QrCode.stop().then(() => showResults()).catch(() => showResults());
         } else {
             showResults();
-        }
-    }
-
-    function stopScanningAndBack() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            html5QrCode.stop().finally(() => goHome());
-        } else {
-            goHome();
         }
     }
 
