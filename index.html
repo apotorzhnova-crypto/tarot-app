@@ -198,6 +198,53 @@
             backdrop-filter: blur(4px);
         }
 
+        .manual-category-title {
+            color: var(--accent-gold);
+            font-size: 16px;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .manual-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .manual-card-item {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 10px;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .manual-card-item:active {
+            background: rgba(45, 38, 75, 0.8);
+            border-color: var(--accent-gold);
+        }
+
+        .manual-thumb {
+            width: 40px;
+            height: 65px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid var(--accent-gold);
+            flex-shrink: 0;
+        }
+
+        .manual-name {
+            font-size: 13px;
+            color: #fff;
+            line-height: 1.2;
+        }
+
         .result-item {
             background: var(--card-bg);
             border-radius: 12px;
@@ -337,7 +384,15 @@
                 </button>
             </div>
 
-            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="stopScanningAndBack()">Отмена</button>
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="openManualSelection()">📜 Выбрать карту вручную</button>
+            <button class="btn btn-secondary" style="margin-top: 10px;" onclick="stopScanningAndBack()">Отмена</button>
+        </div>
+
+        <!-- ЭКРАН 3.1: РУЧНОЙ ВЫБОР КАРТ -->
+        <div id="screen-manual" class="screen">
+            <h2 style="color: var(--accent-gold); margin-top:0; font-size:18px;">Выберите карту из списка:</h2>
+            <div id="manual-cards-container"></div>
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="closeManualSelection()">Назад к камере</button>
         </div>
 
         <!-- ЭКРАН 4: РЕЗУЛЬТАТЫ -->
@@ -360,100 +415,99 @@
 </div>
 
 <script>
-    // 1. БАЗА ДАННЫХ 78 КАРТ С АЛИАСАМИ
+    // 1. БАЗА ДАННЫХ 78 КАРТ С АЛИАСАМИ (ФОРМАТ С _01 И КАРТИНКАМИ БЕЗ НУЛЕЙ ДЛЯ 2-10)
     const tarotDatabase = {
         // === СТАРШИЕ АРКАНЫ ===
-        "MAJOR_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, чистота восприятия.", description: "Шут символизирует начало нового жизненного путешествия. Это чистый лист, отсутствие страха перед неизвестностью и готовность довериться судьбе.", image: "MAJOR_FOOL.png", aliases: ["FOOL", "00_FOOL", "0_FOOL", "ШУТ", "ДУРАК"] },
-        "MAJOR_MAGICIAN": { name: "1. Маг", meaning: "Воля, мастерство, активное действие, реализация задуманного.", description: "Маг обладает всеми ресурсами для достижения успеха. У вас есть все необходимые знания и инструменты. Время действовать.", image: "MAJOR_MAGICIAN.png", aliases: ["MAGICIAN", "01_MAGICIAN", "1_MAGICIAN", "МАГ"] },
-        "MAJOR_PRIESTESS": { name: "2. Верховная Жрица", meaning: "Интуиция, тайны, скрытые знания, подсознание, пауза.", description: "Жрица указывает на необходимость прислушаться к внутреннему голосу и довериться интуиции.", image: "MAJOR_PRIESTESS.png", aliases: ["PRIESTESS", "HIGH_PRIESTESS", "02_PRIESTESS", "ЖРИЦА"] },
-        "MAJOR_EMPRESS": { name: "3. Императрица", meaning: "Плодородие, изобилие, гармония, творчество, забота.", description: "Символ материнской энергии, процветания и красоты. Ваши проекты принесут плоды.", image: "MAJOR_EMPRESS.png", aliases: ["EMPRESS", "03_EMPRESS", "ИМПЕРАТРИЦА"] },
-        "MAJOR_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, дисциплина, стабильность.", description: "Император отвечает за контроль, закон и логику. Пора навести порядок в делах.", image: "MAJOR_EMPEROR.png", aliases: ["EMPEROR", "04_EMPEROR", "ИМПЕРАТОР"] },
-        "MAJOR_HIEROPHANT": { name: "5. Иерофант (Жрец)", meaning: "Традиции, духовное наставничество, обучение, правила.", description: "Символ мудрости, следования моральным принципам и духовного поиска.", image: "MAJOR_HIEROPHANT.png", aliases: ["HIEROPHANT", "05_HIEROPHANT", "ИЕРОФАНТ", "ЖРЕЦ"] },
-        "MAJOR_LOVERS": { name: "6. Влюбленные", meaning: "Выбор, партнерство, любовь, гармония, союз.", description: "Символ глубокой эмоциональной связи, сердечного выбора и гармоничных отношений.", image: "MAJOR_LOVERS.png", aliases: ["LOVERS", "06_LOVERS", "ВЛЮБЛЕННЫЕ"] },
-        "MAJOR_CHARIOT": { name: "7. Колесница", meaning: "Победа, прорыв, движение вперед, целеустремленность.", description: "Успех благодаря силе воли, дисциплине и контролю над обстоятельствами.", image: "MAJOR_CHARIOT.png", aliases: ["CHARIOT", "07_CHARIOT", "КОЛЕСНИЦА"] },
-        "MAJOR_STRENGTH": { name: "8. Сила", meaning: "Внутренняя сила, мужество, страсть, мягкое укрощение.", description: "Победа над трудностями и страхами терпением, стойкостью и внутренней гармонией.", image: "MAJOR_STRENGTH.png", aliases: ["STRENGTH", "08_STRENGTH", "СИЛА"] },
-        "MAJOR_HERMIT": { name: "9. Отшельник", meaning: "Поиск истины, уединение по доброй воле, мудрость.", description: "Время уединения для переосмысления жизни и поиска ответов внутри себя.", image: "MAJOR_HERMIT.png", aliases: ["HERMIT", "09_HERMIT", "ОТШЕЛЬНИК"] },
-        "MAJOR_WHEEL_OF_FORTUNE": { name: "10. Колесо Фортуны", meaning: "Перемены, цикличность, удача, судьбоносные повороты.", description: "Судьба поворачивает колесо. Наступают перемены, к которым нужно адаптироваться.", image: "MAJOR_WHEEL_OF_FORTUNE.png", aliases: ["WHEEL", "FORTUNE", "10_WHEEL", "КОЛЕСО_ФОРТУНЫ"] },
-        "MAJOR_JUSTICE": { name: "11. Справедливость", meaning: "Закон, честность, карма, объективность, решение.", description: "Карта отвечает за причинно-следственные связи. Вы получите то, что заслужили.", image: "MAJOR_JUSTICE.png", aliases: ["JUSTICE", "11_JUSTICE", "СПРАВЕДЛИВОСТЬ"] },
-        "MAJOR_HANGED_MAN": { name: "12. Повешенный", meaning: "Иной взгляд, пауза, жертвенность, переоценка ценностей.", description: "Ситуация зависла. Взгляните на проблему под другим углом и переосмыслите приоритеты.", image: "MAJOR_HANGED_MAN.png", aliases: ["HANGED_MAN", "12_HANGED", "ПОВЕШЕННЫЙ"] },
-        "MAJOR_DEATH": { name: "13. Смерть", meaning: "Трансформация, завершение этапа, неизбежные перемены.", description: "Окончание старого жизненного цикла. Освобождение места для нового начала.", image: "MAJOR_DEATH.png", aliases: ["DEATH", "13_DEATH", "СМЕРТЬ"] },
-        "MAJOR_TEMPERANCE": { name: "14. Умеренность", meaning: "Баланс, компромисс, исцеление, золотая середина.", description: "Избегайте крайностей. Находите гармонию и дайте времени расставить всё по местам.", image: "MAJOR_TEMPERANCE.png", aliases: ["TEMPERANCE", "14_TEMPERANCE", "УМЕРЕННОСТЬ"] },
-        "MAJOR_DEVIL": { name: "15. Дьявол", meaning: "Искушение, зависимость, привязанность, материализм.", description: "Предостерегает от нездоровых привязанностей, иллюзий и скрытых зависимостей.", image: "MAJOR_DEVIL.png", aliases: ["DEVIL", "15_DEVIL", "ДЬЯВОЛ"] },
-        "MAJOR_TOWER": { name: "16. Башня", meaning: "Внезапный крах, разрушение иллюзий, озарение, прорыв.", description: "Разрушение ложного фундамента. Перемены освобождают путь к истине.", image: "MAJOR_TOWER.png", aliases: ["TOWER", "16_TOWER", "БАШНЯ"] },
-        "MAJOR_STAR": { name: "17. Звезда", meaning: "Надежда, вдохновение, исцеление, вера в будущее.", description: "Светлая карта путеводной звезды. Ваши мечты имеют все шансы воплотиться.", image: "MAJOR_STAR.png", aliases: ["STAR", "17_STAR", "ЗВЕЗДА"] },
-        "MAJOR_MOON": { name: "18. Луна", meaning: "Иллюзии, страхи, неопределенность, сны, подсознание.", description: "Период сомнений. Остерегайтесь обмана и доверяйте внутренней интуиции.", image: "MAJOR_MOON.png", aliases: ["MOON", "18_MOON", "ЛУНА"] },
-        "MAJOR_SUN": { name: "19. Солнце", meaning: "Радость, успех, ясность, жизненная энергия, счастье.", description: "Благоприятная карта. Радость жизни, исполнение желаний и период процветания.", image: "MAJOR_SUN.png", aliases: ["SUN", "19_SUN", "СОЛНЦЕ"] },
-        "MAJOR_JUDGEMENT": { name: "20. Страшный Суд", meaning: "Пробуждение, призвание, освобождение, итоги.", description: "Время подведения итогов и перехода на качественно новый уровень жизни.", image: "MAJOR_JUDGEMENT.png", aliases: ["JUDGEMENT", "20_JUDGEMENT", "СУД"] },
-        "MAJOR_WORLD": { name: "21. Мир", meaning: "Завершение пути, целостность, гармония, успех, интеграция.", description: "Высшая точка достижения целей. Завершение этапа и гармония с миром.", image: "MAJOR_WORLD.png", aliases: ["WORLD", "21_WORLD", "МИР"] },
+        "MAJOR_FOOL": { name: "0. Шут (Дурак)", meaning: "Новые начинания, спонтанность, риск, чистота восприятия.", description: "Шут символизирует начало нового жизненного путешествия. Это чистый лист, отсутствие страха перед неизвестностью и готовность довериться судьбе.", image: "MAJOR_FOOL.png", category: "major", aliases: ["FOOL", "00_FOOL", "0_FOOL", "ШУТ", "ДУРАК"] },
+        "MAJOR_MAGICIAN": { name: "1. Маг", meaning: "Воля, мастерство, активное действие, реализация задуманного.", description: "Маг обладает всеми ресурсами для достижения успеха. У вас есть все необходимые знания и инструменты. Время действовать.", image: "MAJOR_MAGICIAN.png", category: "major", aliases: ["MAGICIAN", "01_MAGICIAN", "1_MAGICIAN", "МАГ"] },
+        "MAJOR_PRIESTESS": { name: "2. Верховная Жрица", meaning: "Интуиция, тайны, скрытые знания, подсознание, пауза.", description: "Жрица указывает на необходимость прислушаться к внутреннему голосу и довериться интуиции.", image: "MAJOR_PRIESTESS.png", category: "major", aliases: ["PRIESTESS", "HIGH_PRIESTESS", "02_PRIESTESS", "ЖРИЦА"] },
+        "MAJOR_EMPRESS": { name: "3. Императрица", meaning: "Плодородие, изобилие, гармония, творчество, забота.", description: "Символ материнской энергии, процветания и красоты. Ваши проекты принесут плоды.", image: "MAJOR_EMPRESS.png", category: "major", aliases: ["EMPRESS", "03_EMPRESS", "ИМПЕРАТРИЦА"] },
+        "MAJOR_EMPEROR": { name: "4. Император", meaning: "Структура, порядок, власть, дисциплина, стабильность.", description: "Император отвечает за контроль, закон и логику. Пора навести порядок в делах.", image: "MAJOR_EMPEROR.png", category: "major", aliases: ["EMPEROR", "04_EMPEROR", "ИМПЕРАТОР"] },
+        "MAJOR_HIEROPHANT": { name: "5. Иерофант (Жрец)", meaning: "Традиции, духовное наставничество, обучение, правила.", description: "Символ мудрости, следования моральным принципам и духовного поиска.", image: "MAJOR_HIEROPHANT.png", category: "major", aliases: ["HIEROPHANT", "05_HIEROPHANT", "ИЕРОФАНТ", "ЖРЕЦ"] },
+        "MAJOR_LOVERS": { name: "6. Влюбленные", meaning: "Выбор, партнерство, любовь, гармония, союз.", description: "Символ глубокой эмоциональной связи, сердечного выбора и гармоничных отношений.", image: "MAJOR_LOVERS.png", category: "major", aliases: ["LOVERS", "06_LOVERS", "ВЛЮБЛЕННЫЕ"] },
+        "MAJOR_CHARIOT": { name: "7. Колесница", meaning: "Победа, прорыв, движение вперед, целеустремленность.", description: "Успех благодаря силе воли, дисциплине и контролю над обстоятельствами.", image: "MAJOR_CHARIOT.png", category: "major", aliases: ["CHARIOT", "07_CHARIOT", "КОЛЕСНИЦА"] },
+        "MAJOR_STRENGTH": { name: "8. Сила", meaning: "Внутренняя сила, мужество, страсть, мягкое укрощение.", description: "Победа над трудностями и страхами терпением, стойкостью и внутренней гармонией.", image: "MAJOR_STRENGTH.png", category: "major", aliases: ["STRENGTH", "08_STRENGTH", "СИЛА"] },
+        "MAJOR_HERMIT": { name: "9. Отшельник", meaning: "Поиск истины, уединение по доброй воле, мудрость.", description: "Время уединения для переосмысления жизни и поиска ответов внутри себя.", image: "MAJOR_HERMIT.png", category: "major", aliases: ["HERMIT", "09_HERMIT", "ОТШЕЛЬНИК"] },
+        "MAJOR_WHEEL_OF_FORTUNE": { name: "10. Колесо Фортуны", meaning: "Перемены, цикличность, удача, судьбоносные повороты.", description: "Судьба поворачивает колесо. Наступают перемены, к которым нужно адаптироваться.", image: "MAJOR_WHEEL_OF_FORTUNE.png", category: "major", aliases: ["WHEEL", "FORTUNE", "10_WHEEL", "КОЛЕСО_ФОРТУНЫ"] },
+        "MAJOR_JUSTICE": { name: "11. Справедливость", meaning: "Закон, честность, карма, объективность, решение.", description: "Карта отвечает за причинно-следственные связи. Вы получите то, что заслужили.", image: "MAJOR_JUSTICE.png", category: "major", aliases: ["JUSTICE", "11_JUSTICE", "СПРАВЕДЛИВОСТЬ"] },
+        "MAJOR_HANGED_MAN": { name: "12. Повешенный", meaning: "Иной взгляд, пауза, жертвенность, переоценка ценностей.", description: "Ситуация зависла. Взгляните на проблему под другим углом и переосмыслите приоритеты.", image: "MAJOR_HANGED_MAN.png", category: "major", aliases: ["HANGED_MAN", "12_HANGED", "ПОВЕШЕННЫЙ"] },
+        "MAJOR_DEATH": { name: "13. Смерть", meaning: "Трансформация, завершение этапа, неизбежные перемены.", description: "Окончание старого жизненного цикла. Освобождение места для нового начала.", image: "MAJOR_DEATH.png", category: "major", aliases: ["DEATH", "13_DEATH", "СМЕРТЬ"] },
+        "MAJOR_TEMPERANCE": { name: "14. Умеренность", meaning: "Баланс, компромисс, исцеление, золотая середина.", description: "Избегайте крайностей. Находите гармонию и дайте времени расставить всё по местам.", image: "MAJOR_TEMPERANCE.png", category: "major", aliases: ["TEMPERANCE", "14_TEMPERANCE", "УМЕРЕННОСТЬ"] },
+        "MAJOR_DEVIL": { name: "15. Дьявол", meaning: "Искушение, зависимость, привязанность, материализм.", description: "Предостерегает от нездоровых привязанностей, иллюзий и скрытых зависимостей.", image: "MAJOR_DEVIL.png", category: "major", aliases: ["DEVIL", "15_DEVIL", "ДЬЯВОЛ"] },
+        "MAJOR_TOWER": { name: "16. Башня", meaning: "Внезапный крах, разрушение иллюзий, озарение, прорыв.", description: "Разрушение ложного фундамента. Перемены освобождают путь к истине.", image: "MAJOR_TOWER.png", category: "major", aliases: ["TOWER", "16_TOWER", "БАШНЯ"] },
+        "MAJOR_STAR": { name: "17. Звезда", meaning: "Надежда, вдохновение, исцеление, вера в будущее.", description: "Светлая карта путеводной звезды. Ваши мечты имеют все шансы воплотиться.", image: "MAJOR_STAR.png", category: "major", aliases: ["STAR", "17_STAR", "ЗВЕЗДА"] },
+        "MAJOR_MOON": { name: "18. Луна", meaning: "Иллюзии, страхи, неопределенность, сны, подсознание.", description: "Период сомнений. Остерегайтесь обмана и доверяйте внутренней интуиции.", image: "MAJOR_MOON.png", category: "major", aliases: ["MOON", "18_MOON", "ЛУНА"] },
+        "MAJOR_SUN": { name: "19. Солнце", meaning: "Радость, успех, ясность, жизненная энергия, счастье.", description: "Благоприятная карта. Радость жизни, исполнение желаний и период процветания.", image: "MAJOR_SUN.png", category: "major", aliases: ["SUN", "19_SUN", "СОЛНЦЕ"] },
+        "MAJOR_JUDGEMENT": { name: "20. Страшный Суд", meaning: "Пробуждение, призвание, освобождение, итоги.", description: "Время подведения итогов и перехода на качественно новый уровень жизни.", image: "MAJOR_JUDGEMENT.png", category: "major", aliases: ["JUDGEMENT", "20_JUDGEMENT", "СУД"] },
+        "MAJOR_WORLD": { name: "21. Мир", meaning: "Завершение пути, целостность, гармония, успех, интеграция.", description: "Высшая точка достижения целей. Завершение этапа и гармония с миром.", image: "MAJOR_WORLD.png", category: "major", aliases: ["WORLD", "21_WORLD", "МИР"] },
 
-        // === ЖЕЗЛЫ ===
-        "MINOR_WANDS_ACE": { name: "Туз Жезлов", meaning: "Инициатива, новая идея, вспышка страсти, вдохновение.", description: "Мощный импульс энергии. Появление перспективной идеи и нового начинания.", image: "WANDS_ACE.png", aliases: ["WANDS_1", "ACE_OF_WANDS", "ТУЗ_ЖЕЗЛОВ"] },
-        "WANDS_02": { name: "2 Жезлов", meaning: "Планирование, выбор пути, амбиции, расширение горизонтов.", description: "Первый успех достигнут, пора строить долгосрочные планы развития.", image: "WANDS_2.png", aliases: ["WANDS_2", "2_OF_WANDS", "ДВОЙКА_ЖЕЗЛОВ"] },
-        "WANDS_03": { name: "3 Жезлов", meaning: "Уверенное движение, партнерство, первые результаты.", description: "Замыслы приносят первые плоды. Время уверенно смотреть в будущее.", image: "WANDS_3.png", aliases: ["WANDS_3", "3_OF_WANDS", "ТРОЙКА_ЖЕЗЛОВ"] },
-        "WANDS_04": { name: "4 Жезлов", meaning: "Праздник, уют, радость, стабильность, новоселье.", description: "Счастливое завершение важного этапа. Празднование и внутренний покой.", image: "WANDS_4.png", aliases: ["WANDS_4", "4_OF_WANDS", "ЧЕТВЕРКА_ЖЕЗЛОВ"] },
-        "WANDS_05": { name: "5 Жезлов", meaning: "Конкуренция, споры, здоровое соперничество, испытание.", description: "Столкновение интересов. Возможность отстоять свои позиции в соревновании.", image: "WANDS_5.png", aliases: ["WANDS_5", "5_OF_WANDS", "ПЯТЕРКА_ЖЕЗЛОВ"] },
-        "WANDS_06": { name: "6 Жезлов", meaning: "Триумф, признание, победа, хорошие новости.", description: "Публичный успех и признание ваших заслуг. Период гордости за результаты.", image: "WANDS_6.png", aliases: ["WANDS_6", "6_OF_WANDS", "ШЕСТЕРКА_ЖЕЗЛОВ"] },
-        "WANDS_07": { name: "7 Жезлов", meaning: "Защита позиций, стойкость, отстаивание прав.", description: "Защита успехов от конкурентов. Проявите твердость — победа за вами.", image: "WANDS_7.png", aliases: ["WANDS_7", "7_OF_WANDS", "СЕМЕРКА_ЖЕЗЛОВ"] },
-        "WANDS_08": { name: "8 Жезлов", meaning: "Быстрые события, известия, поездки, стремительный прогресс.", description: "События развиваются стремительно. Ожидайте важных новостей или поездки.", image: "WANDS_8.png", aliases: ["WANDS_8", "8_OF_WANDS", "ВОСЬМЕРКА_ЖЕЗЛОВ"] },
-        "WANDS_09": { name: "9 Жезлов", meaning: "Осторожность, настороженность, готовность к обороне.", description: "Опыт прошлых ошибок заставляет быть начеку. Сил хватит довести дело до конца.", image: "WANDS_9.png", aliases: ["WANDS_9", "9_OF_WANDS", "ДЕВЯТКА_ЖЕЗЛОВ"] },
-        "WANDS_10": { name: "10 Жезлов", meaning: "Перегрузка, тяжкий груз, ответственность, усталость.", description: "Слишком много обязательств. Пора делегировать задачи и сбросить груз.", image: "WANDS_10.png", aliases: ["10_OF_WANDS", "ДЕСЯТКА_ЖЕЗЛОВ"] },
-        "WANDS_PAGE": { name: "Паж Жезлов", meaning: "Энтузиазм, известие, любопытство, новое увлечение.", description: "Приход хороших новостей. Желание учиться новому и исследовать возможности.", image: "WANDS_PAGE.png", aliases: ["PAGE_OF_WANDS", "ПАЖ_ЖЕЗЛОВ"] },
-        "WANDS_KNIGHT": { name: "Рыцарь Жезлов", meaning: "Движение, импульсивность, азарт, смелые шаги.", description: "Энергичные действия, драйв и авантюризм. Действуйте смело, но без спешки.", image: "WANDS_KNIGHT.png", aliases: ["KNIGHT_OF_WANDS", "РЫЦАРЬ_ЖЕЗЛОВ"] },
-        "WANDS_QUEEN": { name: "Королева Жезлов", meaning: "Харизма, уверенность, независимость, вдохновение.", description: "Энергичная женщина. Умение вести за собой и создавать теплую атмосферу.", image: "WANDS_QUEEN.png", aliases: ["QUEEN_OF_WANDS", "КОРОЛЕВА_ЖЕЗЛОВ"] },
-        "WANDS_KING": { name: "Король Жезлов", meaning: "Лидерство, авторитет, предпринимательский дух.", description: "Амбициозный лидер. Проявляйте решительность и масштабное мышление.", image: "WANDS_KING.png", aliases: ["KING_OF_WANDS", "КОРОЛЬ_ЖЕЗЛОВ"] },
+        // === ЖЕЗЛЫ (WANDS) ===
+        "MINOR_WANDS_ACE": { name: "Туз Жезлов", meaning: "Инициатива, новая идея, вспышка страсти, вдохновение.", description: "Мощный импульс энергии. Появление перспективной идеи и нового начинания.", image: "WANDS_ACE.png", category: "wands", aliases: ["MINOR_WANDS_ACE", "WANDS_1", "ACE_OF_WANDS", "ТУЗ_ЖЕЗЛОВ"] },
+        "WANDS_02": { name: "2 Жезлов", meaning: "Планирование, выбор пути, амбиции, расширение горизонтов.", description: "Первый успех достигнут, пора строить долгосрочные планы развития.", image: "WANDS_2.png", category: "wands", aliases: ["WANDS_2", "2_OF_WANDS", "ДВОЙКА_ЖЕЗЛОВ"] },
+        "WANDS_03": { name: "3 Жезлов", meaning: "Уверенное движение, партнерство, первые результаты.", description: "Замыслы приносят первые плоды. Время уверенно смотреть в будущее.", image: "WANDS_3.png", category: "wands", aliases: ["WANDS_3", "3_OF_WANDS", "ТРОЙКА_ЖЕЗЛОВ"] },
+        "WANDS_04": { name: "4 Жезлов", meaning: "Праздник, уют, радость, стабильность, новоселье.", description: "Счастливое завершение важного этапа. Празднование и внутренний покой.", image: "WANDS_4.png", category: "wands", aliases: ["WANDS_4", "4_OF_WANDS", "ЧЕТВЕРКА_ЖЕЗЛОВ"] },
+        "WANDS_05": { name: "5 Жезлов", meaning: "Конкуренция, споры, здоровое соперничество, испытание.", description: "Столкновение интересов. Возможность отстоять свои позиции в соревновании.", image: "WANDS_5.png", category: "wands", aliases: ["WANDS_5", "5_OF_WANDS", "ПЯТЕРКА_ЖЕЗЛОВ"] },
+        "WANDS_06": { name: "6 Жезлов", meaning: "Триумф, признание, победа, хорошие новости.", description: "Публичный успех и признание ваших заслуг. Период гордости за результаты.", image: "WANDS_6.png", category: "wands", aliases: ["WANDS_6", "6_OF_WANDS", "ШЕСТЕРКА_ЖЕЗЛОВ"] },
+        "WANDS_07": { name: "7 Жезлов", meaning: "Защита позиций, стойкость, отстаивание прав.", description: "Защита успехов от конкурентов. Проявите твердость — победа за вами.", image: "WANDS_7.png", category: "wands", aliases: ["WANDS_7", "7_OF_WANDS", "СЕМЕРКА_ЖЕЗЛОВ"] },
+        "WANDS_08": { name: "8 Жезлов", meaning: "Быстрые события, известия, поездки, стремительный прогресс.", description: "События развиваются стремительно. Ожидайте важных новостей или поездки.", image: "WANDS_8.png", category: "wands", aliases: ["WANDS_8", "8_OF_WANDS", "ВОСЬМЕРКА_ЖЕЗЛОВ"] },
+        "WANDS_09": { name: "9 Жезлов", meaning: "Осторожность, настороженность, готовность к обороне.", description: "Опыт прошлых ошибок заставляет быть начеку. Сил хватит довести дело до конца.", image: "WANDS_9.png", category: "wands", aliases: ["WANDS_9", "9_OF_WANDS", "ДЕВЯТКА_ЖЕЗЛОВ"] },
+        "WANDS_10": { name: "10 Жезлов", meaning: "Перегрузка, тяжкий груз, ответственность, усталость.", description: "Слишком много обязательств. Пора делегировать задачи и сбросить груз.", image: "WANDS_10.png", category: "wands", aliases: ["10_OF_WANDS", "ДЕСЯТКА_ЖЕЗЛОВ"] },
+        "WANDS_PAGE": { name: "Паж Жезлов", meaning: "Энтузиазм, известие, любопытство, новое увлечение.", description: "Приход хороших новостей. Желание учиться новому и исследовать возможности.", image: "WANDS_PAGE.png", category: "wands", aliases: ["PAGE_OF_WANDS", "ПАЖ_ЖЕЗЛОВ"] },
+        "WANDS_KNIGHT": { name: "Рыцарь Жезлов", meaning: "Движение, импульсивность, азарт, смелые шаги.", description: "Энергичные действия, драйв и авантюризм. Действуйте смело, но без спешки.", image: "WANDS_KNIGHT.png", category: "wands", aliases: ["KNIGHT_OF_WANDS", "РЫЦАРЬ_ЖЕЗЛОВ"] },
+        "WANDS_QUEEN": { name: "Королева Жезлов", meaning: "Харизма, уверенность, независимость, вдохновение.", description: "Энергичная женщина. Умение вести за собой и создавать теплую атмосферу.", image: "WANDS_QUEEN.png", category: "wands", aliases: ["QUEEN_OF_WANDS", "КОРОЛЕВА_ЖЕЗЛОВ"] },
+        "WANDS_KING": { name: "Король Жезлов", meaning: "Лидерство, авторитет, предпринимательский дух.", description: "Амбициозный лидер. Проявляйте решительность и масштабное мышление.", image: "WANDS_KING.png", category: "wands", aliases: ["KING_OF_WANDS", "КОРОЛЬ_ЖЕЗЛОВ"] },
 
-        // === КУБКИ ===
-        "MINOR_CUPS_ACE": { name: "Туз Кубков", meaning: "Любовь, искренние эмоции, вдохновение, счастье.", description: "Начало новой любви, глубокой дружбы или эмоционального исцеления.", image: "CUPS_ACE.png", aliases: ["CUPS_1", "ACE_OF_CUPS", "ТУЗ_КУБКОВ"] },
-        "CUPS_02": { name: "2 Кубков", meaning: "Взаимность, симпатия, партнерство, гармония.", description: "Гармоничный союз двух сердец. Взаимопонимание в любви или делах.", image: "CUPS_2.png", aliases: ["CUPS_2", "2_OF_CUPS", "ДВОЙКА_КУБКОВ"] },
-        "CUPS_03": { name: "3 Кубков", meaning: "Праздник, дружба, совместная радость, поддержка.", description: "Радостная встреча с друзьями, празднование успеха в кругу единомышленников.", image: "CUPS_3.png", aliases: ["CUPS_3", "3_OF_CUPS", "ТРОЙКА_КУБКОВ"] },
-        "CUPS_04": { name: "4 Кубков", meaning: "Апатия, упущенные шансы, недовольство, скука.", description: "Эмоциональное выгорание. Вы не замечаете ценных возможностей рядом.", image: "CUPS_4.png", aliases: ["CUPS_4", "4_OF_CUPS", "ЧЕТВЕРКА_КУБКОВ"] },
-        "CUPS_05": { name: "5 Кубков", meaning: "Печаль, сожаление об упущенном, фокус на негативе.", description: "Огорчение из-за потерь. Обратите внимание на то, что у вас осталось.", image: "CUPS_5.png", aliases: ["CUPS_5", "5_OF_CUPS", "ПЯТЕРКА_КУБКОВ"] },
-        "CUPS_06": { name: "6 Кубков", meaning: "Воспоминания, ностальгия, встреча из прошлого, детство.", description: "Теплые воспоминания, возвращение давних знакомых или детская доброта.", image: "CUPS_6.png", aliases: ["CUPS_6", "6_OF_CUPS", "ШЕСТЕРКА_КУБКОВ"] },
-        "CUPS_07": { name: "7 Кубков", meaning: "Иллюзии, мечты, соблазны, сложность выбора.", description: "Множество фантазий, но не все они реальны. Остерегайтесь самообмана.", image: "CUPS_7.png", aliases: ["CUPS_7", "7_OF_CUPS", "СЕМЕРКА_КУБКОВ"] },
-        "CUPS_08": { name: "8 Кубков", meaning: "Уход от прошлого, поиск высшего смысла, перемены.", description: "Осознанное решение оставить то, что не радует, и найти свой путь.", image: "CUPS_8.png", aliases: ["CUPS_8", "8_OF_CUPS", "ВОСЬМЕРКА_КУБКОВ"] },
-        "CUPS_09": { name: "9 Кубков", meaning: "Удовлетворение, исполнение желаний, комфорт.", description: "Исполнение желаний. Эмоциональная сытость и удовольствие от жизни.", image: "CUPS_9.png", aliases: ["CUPS_9", "9_OF_CUPS", "ДЕВЯТКА_КУБКОВ"] },
-        "CUPS_10": { name: "10 Кубков", meaning: "Семейное счастье, любовь, полная гармония, дом.", description: "Высшая степень счастья. Любовь в семье и душевный покой.", image: "CUPS_10.png", aliases: ["10_OF_CUPS", "ДЕСЯТКА_КУБКОВ"] },
-        "CUPS_PAGE": { name: "Паж Кубков", meaning: "Трогательное послание, романтика, творческий порыв.", description: "Приятное эмоциональное известие или зарождающаяся симпатия.", image: "CUPS_PAGE.png", aliases: ["PAGE_OF_CUPS", "ПАЖ_КУБКОВ"] },
-        "CUPS_KNIGHT": { name: "Рыцарь Кубков", meaning: "Романтика, признание в чувствах, предложение.", description: "Прибытие романтического предложения или человека, несущего заботу.", image: "CUPS_KNIGHT.png", aliases: ["KNIGHT_OF_CUPS", "РЫЦАРЬ_КУБКОВ"] },
-        "CUPS_QUEEN": { name: "Королева Кубков", meaning: "Эмпатия, мягкость, забота, развитая интуиция.", description: "Чуткая женщина. Умение слушать, сопереживать и дарить душевное тепло.", image: "CUPS_QUEEN.png", aliases: ["QUEEN_OF_CUPS", "КОРОЛЕВА_КУБКОВ"] },
-        "CUPS_KING": { name: "Король Кубков", meaning: "Эмоциональная зрелость, мудрость, поддержка.", description: "Человек, умеющий контролировать эмоции и давать мудрые советы.", image: "CUPS_KING.png", aliases: ["KING_OF_CUPS", "КОРОЛЬ_КУБКОВ"] },
+        // === КУБКИ (CUPS) ===
+        "MINOR_CUPS_ACE": { name: "Туз Кубков", meaning: "Любовь, искренние эмоции, вдохновение, счастье.", description: "Начало новой любви, глубокой дружбы или эмоционального исцеления.", image: "CUPS_ACE.png", category: "cups", aliases: ["MINOR_CUPS_ACE", "CUPS_1", "ACE_OF_CUPS", "ТУЗ_КУБКОВ"] },
+        "CUPS_02": { name: "2 Кубков", meaning: "Взаимность, симпатия, партнерство, гармония.", description: "Гармоничный союз двух сердец. Взаимопонимание в любви или делах.", image: "CUPS_2.png", category: "cups", aliases: ["CUPS_2", "2_OF_CUPS", "ДВОЙКА_КУБКОВ"] },
+        "CUPS_03": { name: "3 Кубков", meaning: "Праздник, дружба, совместная радость, поддержка.", description: "Радостная встреча с друзьями, празднование успеха в кругу единомышленников.", image: "CUPS_3.png", category: "cups", aliases: ["CUPS_3", "3_OF_CUPS", "ТРОЙКА_КУБКОВ"] },
+        "CUPS_04": { name: "4 Кубков", meaning: "Апатия, упущенные шансы, недовольство, скука.", description: "Эмоциональное выгорание. Вы не замечаете ценных возможностей рядом.", image: "CUPS_4.png", category: "cups", aliases: ["CUPS_4", "4_OF_CUPS", "ЧЕТВЕРКА_КУБКОВ"] },
+        "CUPS_05": { name: "5 Кубков", meaning: "Печаль, сожаление об упущенном, фокус на негативе.", description: "Огорчение из-за потерь. Обратите внимание на то, что у вас осталось.", image: "CUPS_5.png", category: "cups", aliases: ["CUPS_5", "5_OF_CUPS", "ПЯТЕРКА_КУБКОВ"] },
+        "CUPS_06": { name: "6 Кубков", meaning: "Воспоминания, ностальгия, встреча из прошлого, детство.", description: "Теплые воспоминания, возвращение давних знакомых или детская доброта.", image: "CUPS_6.png", category: "cups", aliases: ["CUPS_6", "6_OF_CUPS", "ШЕСТЕРКА_КУБКОВ"] },
+        "CUPS_07": { name: "7 Кубков", meaning: "Иллюзии, мечты, соблазны, сложность выбора.", description: "Множество фантазий, но не все они реальны. Остерегайтесь самообмана.", image: "CUPS_7.png", category: "cups", aliases: ["CUPS_7", "7_OF_CUPS", "СЕМЕРКА_КУБКОВ"] },
+        "CUPS_08": { name: "8 Кубков", meaning: "Уход от прошлого, поиск высшего смысла, перемены.", description: "Осознанное решение оставить то, что не радует, и найти свой путь.", image: "CUPS_8.png", category: "cups", aliases: ["CUPS_8", "8_OF_CUPS", "ВОСЬМЕРКА_КУБКОВ"] },
+        "CUPS_09": { name: "9 Кубков", meaning: "Удовлетворение, исполнение желаний, комфорт.", description: "Исполнение желаний. Эмоциональная сытость и удовольствие от жизни.", image: "CUPS_9.png", category: "cups", aliases: ["CUPS_9", "9_OF_CUPS", "ДЕВЯТКА_КУБКОВ"] },
+        "CUPS_10": { name: "10 Кубков", meaning: "Семейное счастье, любовь, полная гармония, дом.", description: "Высшая степень счастья. Любовь в семье и душевный покой.", image: "CUPS_10.png", category: "cups", aliases: ["10_OF_CUPS", "ДЕСЯТКА_КУБКОВ"] },
+        "CUPS_PAGE": { name: "Паж Кубков", meaning: "Трогательное послание, романтика, творческий порыв.", description: "Приятное эмоциональное известие или зарождающаяся симпатия.", image: "CUPS_PAGE.png", category: "cups", aliases: ["PAGE_OF_CUPS", "ПАЖ_КУБКОВ"] },
+        "CUPS_KNIGHT": { name: "Рыцарь Кубков", meaning: "Романтика, признание в чувствах, предложение.", description: "Прибытие романтического предложения или человека, несущего заботу.", image: "CUPS_KNIGHT.png", category: "cups", aliases: ["KNIGHT_OF_CUPS", "РЫЦАРЬ_КУБКОВ"] },
+        "CUPS_QUEEN": { name: "Королева Кубков", meaning: "Эмпатия, мягкость, забота, развитая интуиция.", description: "Чуткая женщина. Умение слушать, сопереживать и дарить душевное тепло.", image: "CUPS_QUEEN.png", category: "cups", aliases: ["QUEEN_OF_CUPS", "КОРОЛЕВА_КУБКОВ"] },
+        "CUPS_KING": { name: "Король Кубков", meaning: "Эмоциональная зрелость, мудрость, поддержка.", description: "Человек, умеющий контролировать эмоции и давать мудрые советы.", image: "CUPS_KING.png", category: "cups", aliases: ["KING_OF_CUPS", "КОРОЛЬ_КУБКОВ"] },
 
-        // === МЕЧИ ===
-        "MINOR_SWORDS_ACE": { name: "Туз Мечей", meaning: "Ясность ума, прорыв, правда, важное решение.", description: "Озарение, отсечение лишнего. Ситуация становится кристально понятной.", image: "SWORDS_ACE.png", aliases: ["SWORDS_1", "ACE_OF_SWORDS", "ТУЗ_МЕЧЕЙ"] },
-        "SWORDS_02": { name: "2 Мечей", meaning: "Замкнутость, сомнения, компромисс, закрытые глаза.", description: "Нежелание видеть правду или принимать сложное решение.", image: "SWORDS_2.png", aliases: ["SWORDS_2", "2_OF_SWORDS", "ДВОЙКА_МЕЧЕЙ"] },
-        "SWORDS_03": { name: "3 Мечей", meaning: "Боль, разбитое сердце, разочарование, печальная правда.", description: "Эмоциональная боль или болезненное осознание истины.", image: "SWORDS_3.png", aliases: ["SWORDS_3", "3_OF_SWORDS", "ТРОЙКА_МЕЧЕЙ"] },
-        "SWORDS_04": { name: "4 Мечей", meaning: "Отдых, восстановление сил, медитация, пауза.", description: "Необходимость взять передышку и восстановить ментальные ресурсы.", image: "SWORDS_4.png", aliases: ["SWORDS_4", "4_OF_SWORDS", "ЧЕТВЕРКА_МЕЧЕЙ"] },
-        "SWORDS_05": { name: "5 Мечей", meaning: "Пиррова победа, конфликт, поражение, напряжение.", description: "Конфликт, в котором победа достается дорогой ценой. Избегайте споров.", image: "SWORDS_5.png", aliases: ["SWORDS_5", "5_OF_SWORDS", "ПЯТЕРКА_МЕЧЕЙ"] },
-        "SWORDS_06": { name: "6 Мечей", meaning: "Переход, путь к лучшему, уход от проблем.", description: "Оставление трудностей позади. Путешествие или выход из кризиса.", image: "SWORDS_6.png", aliases: ["SWORDS_6", "6_OF_SWORDS", "ШЕСТЕРКА_МЕЧЕЙ"] },
-        "SWORDS_07": { name: "7 Мечей", meaning: "Хитрость, утаивание, обходные пути, стратегии.", description: "Необходимость действовать гибко или предостережение от обмана.", image: "SWORDS_7.png", aliases: ["SWORDS_7", "7_OF_SWORDS", "СЕМЕРКА_МЕЧЕЙ"] },
-        "SWORDS_08": { name: "8 Мечей", meaning: "Ограничения, самоограничение, чувство тупика.", description: "Ограничения находятся в вашей голове. Снимите повязку с глаз.", image: "SWORDS_8.png", aliases: ["SWORDS_8", "8_OF_SWORDS", "ВОСЬМЕРКА_МЕЧЕЙ"] },
-        "SWORDS_09": { name: "9 Мечей", meaning: "Тревога, бессонница, страхи, переживания.", description: "Ночные тревоги. Большинство ваших страхов преувеличены.", image: "SWORDS_9.png", aliases: ["SWORDS_9", "9_OF_SWORDS", "ДЕВЯТКА_МЕЧЕЙ"] },
-        "SWORDS_10": { name: "10 Мечей", meaning: "Окончательный финал, дно кризиса, рассвет близко.", description: "Завершение сложного периода. Впереди только обновление.", image: "SWORDS_10.png", aliases: ["10_OF_SWORDS", "ДЕСЯТКА_МЕЧЕЙ"] },
-        "SWORDS_PAGE": { name: "Паж Мечей", meaning: "Сбор информации, наблюдение, критичность.", description: "Любопытство, поиск фактов и бдительность.", image: "SWORDS_PAGE.png", aliases: ["PAGE_OF_SWORDS", "ПАЖ_МЕЧЕЙ"] },
-        "SWORDS_KNIGHT": { name: "Рыцарь Мечей", meaning: "Резкость, стремительная атака, споры, решительность.", description: "Стремительные действия, прямой разговор. Действуйте быстро, но сдержанно.", image: "SWORDS_KNIGHT.png", aliases: ["KNIGHT_OF_SWORDS", "РЫЦАРЬ_МЕЧЕЙ"] },
-        "SWORDS_QUEEN": { name: "Королева Мечей", meaning: "Проницательность, независимость, логика, честность.", description: "Независимая женщина. Умение отсекать эмоции ради истины.", image: "SWORDS_QUEEN.png", aliases: ["QUEEN_OF_SWORDS", "КОРОЛЕВА_МЕЧЕЙ"] },
-        "SWORDS_KING": { name: "Король Мечей", meaning: "Аналитический ум, авторитет, объективность.", description: "Профессионал, опирающийся на факты и закон.", image: "SWORDS_KING.png", aliases: ["KING_OF_SWORDS", "КОРОЛЬ_МЕЧЕЙ"] },
+        // === МЕЧИ (SWORDS) ===
+        "MINOR_SWORDS_ACE": { name: "Туз Мечей", meaning: "Ясность ума, прорыв, правда, важное решение.", description: "Озарение, отсечение лишнего. Ситуация становится кристально понятной.", image: "SWORDS_ACE.png", category: "swords", aliases: ["MINOR_SWORDS_ACE", "SWORDS_1", "ACE_OF_SWORDS", "ТУЗ_МЕЧЕЙ"] },
+        "SWORDS_02": { name: "2 Мечей", meaning: "Замкнутость, сомнения, компромисс, закрытые глаза.", description: "Нежелание видеть правду или принимать сложное решение.", image: "SWORDS_2.png", category: "swords", aliases: ["SWORDS_2", "2_OF_SWORDS", "ДВОЙКА_МЕЧЕЙ"] },
+        "SWORDS_03": { name: "3 Мечей", meaning: "Боль, разбитое сердце, разочарование, печальная правда.", description: "Эмоциональная боль или болезненное осознание истины.", image: "SWORDS_3.png", category: "swords", aliases: ["SWORDS_3", "3_OF_SWORDS", "ТРОЙКА_МЕЧЕЙ"] },
+        "SWORDS_04": { name: "4 Мечей", meaning: "Отдых, восстановление сил, медитация, пауза.", description: "Необходимость взять передышку и восстановить ментальные ресурсы.", image: "SWORDS_4.png", category: "swords", aliases: ["SWORDS_4", "4_OF_SWORDS", "ЧЕТВЕРКА_МЕЧЕЙ"] },
+        "SWORDS_05": { name: "5 Мечей", meaning: "Пиррова победа, конфликт, поражение, напряжение.", description: "Конфликт, в котором победа достается дорогой ценой. Избегайте споров.", image: "SWORDS_5.png", category: "swords", aliases: ["SWORDS_5", "5_OF_SWORDS", "ПЯТЕРКА_МЕЧЕЙ"] },
+        "SWORDS_06": { name: "6 Мечей", meaning: "Переход, путь к лучшему, уход от проблем.", description: "Оставление трудностей позади. Путешествие или выход из кризиса.", image: "SWORDS_6.png", category: "swords", aliases: ["SWORDS_6", "6_OF_SWORDS", "ШЕСТЕРКА_МЕЧЕЙ"] },
+        "SWORDS_07": { name: "7 Мечей", meaning: "Хитрость, утаивание, обходные пути, стратегии.", description: "Необходимость действовать гибко или предостережение от обмана.", image: "SWORDS_7.png", category: "swords", aliases: ["SWORDS_7", "7_OF_SWORDS", "СЕМЕРКА_МЕЧЕЙ"] },
+        "SWORDS_08": { name: "8 Мечей", meaning: "Ограничения, самоограничение, чувство тупика.", description: "Ограничения находятся в вашей голове. Снимите повязку с глаз.", image: "SWORDS_8.png", category: "swords", aliases: ["SWORDS_8", "8_OF_SWORDS", "ВОСЬМЕРКА_МЕЧЕЙ"] },
+        "SWORDS_09": { name: "9 Мечей", meaning: "Тревога, бессонница, страхи, переживания.", description: "Ночные тревоги. Большинство ваших страхов преувеличены.", image: "SWORDS_9.png", category: "swords", aliases: ["SWORDS_9", "9_OF_SWORDS", "ДЕВЯТКА_МЕЧЕЙ"] },
+        "SWORDS_10": { name: "10 Мечей", meaning: "Окончательный финал, дно кризиса, рассвет близко.", description: "Завершение сложного периода. Впереди только обновление.", image: "SWORDS_10.png", category: "swords", aliases: ["10_OF_SWORDS", "ДЕСЯТКА_МЕЧЕЙ"] },
+        "SWORDS_PAGE": { name: "Паж Мечей", meaning: "Сбор информации, наблюдение, критичность.", description: "Любопытство, поиск фактов и бдительность.", image: "SWORDS_PAGE.png", category: "swords", aliases: ["PAGE_OF_SWORDS", "ПАЖ_МЕЧЕЙ"] },
+        "SWORDS_KNIGHT": { name: "Рыцарь Мечей", meaning: "Резкость, стремительная атака, споры, решительность.", description: "Стремительные действия, прямой разговор. Действуйте быстро, но сдержанно.", image: "SWORDS_KNIGHT.png", category: "swords", aliases: ["KNIGHT_OF_SWORDS", "РЫЦАРЬ_МЕЧЕЙ"] },
+        "SWORDS_QUEEN": { name: "Королева Мечей", meaning: "Проницательность, независимость, логика, честность.", description: "Независимая женщина. Умение отсекать эмоции ради истины.", image: "SWORDS_QUEEN.png", category: "swords", aliases: ["QUEEN_OF_SWORDS", "КОРОЛЕВА_МЕЧЕЙ"] },
+        "SWORDS_KING": { name: "Король Мечей", meaning: "Аналитический ум, авторитет, объективность.", description: "Профессионал, опирающийся на факты и закон.", image: "SWORDS_KING.png", category: "swords", aliases: ["KING_OF_SWORDS", "КОРОЛЬ_МЕЧЕЙ"] },
 
-        // === ПЕНТАКЛИ ===
-        "MINOR_PENTACLES_ACE": { name: "Туз Пентаклей", meaning: "Материальный шанс, финансовый успех, подарок судьбы.", description: "Возможность для заработка, покупка или успешный старт бизнеса.", image: "PENTACLES_ACE.png", aliases: ["PENTACLES_1", "ACE_OF_PENTACLES", "ТУЗ_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_02": { name: "2 Пентаклей", meaning: "Балансирование, гибкость, суета, совмещение дел.", description: "Умение справляться с несколькими делами одновременно. Сохраняйте гибкость.", image: "PENTACLES_2.png", aliases: ["PENTACLES_2", "2_OF_PENTACLES", "ДВОЙКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_03": { name: "3 Пентаклей", meaning: "Мастерство, командная работа, рост доходов, учеба.", description: "Признание профессионализма и продуктивное сотрудничество.", image: "PENTACLES_3.png", aliases: ["PENTACLES_3", "3_OF_PENTACLES", "ТРОЙКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_04": { name: "4 Пентаклей", meaning: "Удержание ресурсов, жадность, контроль, стабильность.", description: "Стремление сохранить накопленное. Финансовая безопасность.", image: "PENTACLES_4.png", aliases: ["PENTACLES_4", "4_OF_PENTACLES", "ЧЕТВЕРКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_05": { name: "5 Пентаклей", meaning: "Временные трудности, нехватка ресурсов, поддержка рядом.", description: "Период материальных испытаний. Не бойтесь просить о помощи.", image: "PENTACLES_5.png", aliases: ["PENTACLES_5", "5_OF_PENTACLES", "ПЯТЕРКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_06": { name: "6 Пентаклей", meaning: "Щедрость, баланс брать-давать, помощь, благотворительность.", description: "Получение финансовой поддержки или помощь тем, кто в ней нуждается.", image: "PENTACLES_6.png", aliases: ["PENTACLES_6", "6_OF_PENTACLES", "ШЕСТЕРКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_07": { name: "7 Пентаклей", meaning: "Терпение, ожидание результатов, долгие инвестиции.", description: "Плоды труда созревают. Не торопите события.", image: "PENTACLES_7.png", aliases: ["PENTACLES_7", "7_OF_PENTACLES", "СЕМЕРКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_08": { name: "8 Пентаклей", meaning: "Трудолюбие, мастерство, оттачивание навыков, рутина.", description: "Усердный труд над любимым делом приведет к успеху.", image: "PENTACLES_8.png", aliases: ["PENTACLES_8", "8_OF_PENTACLES", "ВОСЬМЕРКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_09": { name: "9 Пентаклей", meaning: "Материальная независимость, достаток, наслаждение.", description: "Финансовый комфорт и удовольствие от плодов своих трудов.", image: "PENTACLES_9.png", aliases: ["PENTACLES_9", "9_OF_PENTACLES", "ДЕВЯТКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_10": { name: "10 Пентаклей", meaning: "Богатство, семейные традиции, наследие, процветание.", description: "Высший уровень финансовой стабильности и достаток в семье.", image: "PENTACLES_10.png", aliases: ["10_OF_PENTACLES", "ДЕСЯТКА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_PAGE": { name: "Паж Пентаклей", meaning: "Практичность, учеба, финансовая новость, шанс заработать.", description: "Новое деловое предложение и желание закладывать основу успеха.", image: "PENTACLES_PAGE.png", aliases: ["PAGE_OF_PENTACLES", "ПАЖ_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_KNIGHT": { name: "Рыцарь Пентаклей", meaning: "Надежность, методичность, ответственный подход.", description: "Медленное, но уверенное движение к материальной цели.", image: "PENTACLES_KNIGHT.png", aliases: ["KNIGHT_OF_PENTACLES", "РЫЦАРЬ_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_QUEEN": { name: "Королева Пентаклей", meaning: "Рачительность, уют, практичность, забота о доме.", description: "Умение грамотно управлять финансами и создавать уют.", image: "PENTACLES_QUEEN.png", aliases: ["QUEEN_OF_PENTACLES", "КОРОЛЕВА_ПЕНТАКЛЕЙ"] },
-        "PENTACLES_KING": { name: "Король Пентаклей", meaning: "Финансовый успех, предприимчивость, стабильность.", description: "Устойчивое материальное положение и солидность.", image: "PENTACLES_KING.png", aliases: ["KING_OF_PENTACLES", "КОРОЛЬ_ПЕНТАКЛЕЙ"] }
+        // === ПЕНТАКЛИ (PENTACLES) ===
+        "MINOR_PENTACLES_ACE": { name: "Туз Пентаклей", meaning: "Материальный шанс, финансовый успех, подарок судьбы.", description: "Возможность для заработка, покупка или успешный старт бизнеса.", image: "PENTACLES_ACE.png", category: "pentacles", aliases: ["MINOR_PENTACLES_ACE", "PENTACLES_1", "ACE_OF_PENTACLES", "ТУЗ_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_02": { name: "2 Пентаклей", meaning: "Балансирование, гибкость, суета, совмещение дел.", description: "Умение справляться с несколькими делами одновременно. Сохраняйте гибкость.", image: "PENTACLES_2.png", category: "pentacles", aliases: ["PENTACLES_2", "2_OF_PENTACLES", "ДВОЙКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_03": { name: "3 Пентаклей", meaning: "Мастерство, командная работа, рост доходов, учеба.", description: "Признание профессионализма и продуктивное сотрудничество.", image: "PENTACLES_3.png", category: "pentacles", aliases: ["PENTACLES_3", "3_OF_PENTACLES", "ТРОЙКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_04": { name: "4 Пентаклей", meaning: "Удержание ресурсов, жадность, контроль, стабильность.", description: "Стремление сохранить накопленное. Финансовая безопасность.", image: "PENTACLES_4.png", category: "pentacles", aliases: ["PENTACLES_4", "4_OF_PENTACLES", "ЧЕТВЕРКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_05": { name: "5 Пентаклей", meaning: "Временные трудности, нехватка ресурсов, поддержка рядом.", description: "Период материальных испытаний. Не бойтесь просить о помощи.", image: "PENTACLES_5.png", category: "pentacles", aliases: ["PENTACLES_5", "5_OF_PENTACLES", "ПЯТЕРКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_06": { name: "6 Пентаклей", meaning: "Щедрость, баланс брать-давать, помощь, благотворительность.", description: "Получение финансовой поддержки или помощь тем, кто в ней нуждается.", image: "PENTACLES_6.png", category: "pentacles", aliases: ["PENTACLES_6", "6_OF_PENTACLES", "ШЕСТЕРКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_07": { name: "7 Пентаклей", meaning: "Терпение, ожидание результатов, долгие инвестиции.", description: "Плоды труда созревают. Не торопите события.", image: "PENTACLES_7.png", category: "pentacles", aliases: ["PENTACLES_7", "7_OF_PENTACLES", "СЕМЕРКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_08": { name: "8 Пентаклей", meaning: "Трудолюбие, мастерство, оттачивание навыков, рутина.", description: "Усердный труд над любимым делом приведет к успеху.", image: "PENTACLES_8.png", category: "pentacles", aliases: ["PENTACLES_8", "8_OF_PENTACLES", "ВОСЬМЕРКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_09": { name: "9 Пентаклей", meaning: "Материальная независимость, достаток, наслаждение.", description: "Финансовый комфорт и удовольствие от плодов своих трудов.", image: "PENTACLES_9.png", category: "pentacles", aliases: ["PENTACLES_9", "9_OF_PENTACLES", "ДЕВЯТКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_10": { name: "10 Пентаклей", meaning: "Богатство, семейные традиции, наследие, процветание.", description: "Высший уровень финансовой стабильности и достаток в семье.", image: "PENTACLES_10.png", category: "pentacles", aliases: ["10_OF_PENTACLES", "ДЕСЯТКА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_PAGE": { name: "Паж Пентаклей", meaning: "Практичность, учеба, финансовая новость, шанс заработать.", description: "Новое деловое предложение и желание закладывать основу успеха.", image: "PENTACLES_PAGE.png", category: "pentacles", aliases: ["PAGE_OF_PENTACLES", "ПАЖ_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_KNIGHT": { name: "Рыцарь Пентаклей", meaning: "Надежность, методичность, ответственный подход.", description: "Медленное, но уверенное движение к материальной цели.", image: "PENTACLES_KNIGHT.png", category: "pentacles", aliases: ["KNIGHT_OF_PENTACLES", "РЫЦАРЬ_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_QUEEN": { name: "Королева Пентаклей", meaning: "Рачительность, уют, практичность, забота о доме.", description: "Умение грамотно управлять финансами и создавать уют.", image: "PENTACLES_QUEEN.png", category: "pentacles", aliases: ["QUEEN_OF_PENTACLES", "КОРОЛЕВА_ПЕНТАКЛЕЙ"] },
+        "PENTACLES_KING": { name: "Король Пентаклей", meaning: "Финансовый успех, предприимчивость, стабильность.", description: "Устойчивое материальное положение и солидность.", image: "PENTACLES_KING.png", category: "pentacles", aliases: ["KING_OF_PENTACLES", "КОРОЛЬ_ПЕНТАКЛЕЙ"] }
     };
 
     function findCardData(scannedCode) {
         if (!scannedCode) return null;
-        
         const raw = scannedCode.trim().toUpperCase();
         const clean = raw.replace(/[^A-Z0-9_]/g, '');
 
@@ -464,143 +518,22 @@
             const card = tarotDatabase[key];
             if (card.aliases) {
                 for (let alias of card.aliases) {
-                    if (raw === alias || clean === alias || raw.includes(alias) || alias.includes(raw)) {
-                        return card;
-                    }
+                    if (raw === alias || clean === alias || raw.includes(alias) || alias.includes(raw)) return card;
                 }
             }
         }
-
-        const suits = ['WANDS', 'CUPS', 'SWORDS', 'PENTACLES'];
-        for (let suit of suits) {
-            if (raw.includes(suit)) {
-                for (let i = 1; i <= 10; i++) {
-                    const numStr = i < 10 ? '0' + i : '' + i;
-                    if (raw.includes('_' + i) || raw.includes('_' + numStr) || raw.endsWith(i) || raw.endsWith(numStr)) {
-                        const targetKey = suit + '_' + numStr;
-                        if (tarotDatabase[targetKey]) return tarotDatabase[targetKey];
-                    }
-                }
-                if (raw.includes('PAGE') || raw.includes('PAZH')) return tarotDatabase[suit + '_PAGE'];
-                if (raw.includes('KNIGHT') || raw.includes('RYTSAR')) return tarotDatabase[suit + '_KNIGHT'];
-                if (raw.includes('QUEEN') || raw.includes('KOROLEVA')) return tarotDatabase[suit + '_QUEEN'];
-                if (raw.includes('KING') || raw.includes('KOROL')) return tarotDatabase[suit + '_KING'];
-            }
-        }
-
         return null;
     }
 
     // 3. СПИСОК РАСКЛАДОВ
     const spreads = [
-        { 
-            id: 1, 
-            name: "Три карты", 
-            count: 3, 
-            desc: "Прошлое, настоящее, будущее и совет", 
-            schemaImage: "shema3.jpg", 
-            about: "Разложите карты перед собой в порядке, в котором вы их вытянули.",
-            positions: [
-                "Карта 1 — Прошлое (главные моменты прошедшего, влияющие на ситуацию)",
-                "Карта 2 — Настоящее (текущее положение дел)",
-                "Карта 3 — Будущее (путь развития ситуации)"
-            ] 
-        },
-        { 
-            id: 2, 
-            name: "Карта дня", 
-            count: 1, 
-            desc: "Элементарный экспресс-расклад на сегодня", 
-            schemaImage: "", 
-            about: "Используется для получения совета или предсказания на текущий день.",
-            positions: [
-                "Карта 1 — Совет и ключевая энергия Вашего дня"
-            ] 
-        },
-        { 
-            id: 3, 
-            name: "Выбор", 
-            count: 6, 
-            desc: "Принятие верного решения (два пути)", 
-            schemaImage: "shema6vibor.jpg", 
-            about: "Расклад позволяет увидеть решение проблемы или сделать правильный выбор между двумя вариантами.",
-            positions: [
-                "Карта 1 — Вариант А: Перспективы и суть решения",
-                "Карта 2 — Вариант А: К чему приведет этот выбор",
-                "Карта 3 — Вариант А: Итог данного решения",
-                "Карта 4 — Вариант Б: Перспективы и суть альтернативы",
-                "Карта 5 — Вариант Б: К чему приведет второй выбор",
-                "Карта 6 — Вариант Б: Итог альтернативного пути"
-            ] 
-        },
-        { 
-            id: 4, 
-            name: "Что меня ждёт с этим человеком?", 
-            count: 6, 
-            desc: "Анализ отношений и совместного будущего", 
-            schemaImage: "shema6chelovek.jpg", 
-            about: "Позволяет проанализировать отношения с близким человеком.",
-            positions: [
-                "Карта 1 — Как обстоят дела в данный момент",
-                "Карта 2 — Что чувствует партнер по отношению к вам",
-                "Карта 3 — Как видит вас партнер",
-                "Карта 4 — Есть ли будущее между вами",
-                "Карта 5 — Какие перемены произойдут",
-                "Карта 6 — От чего нужно будет отказаться"
-            ] 
-        },
-        { 
-            id: 5, 
-            name: "Расклад на день", 
-            count: 5, 
-            desc: "Эмоциональное, энергетическое и физическое состояние", 
-            schemaImage: "shema5naden.jpg", 
-            about: "Поможет подготовиться к новому дню и прожить его осознанно.",
-            positions: [
-                "Карта 1 — Ваше эмоциональное состояние",
-                "Карта 2 — Ваше энергетическое состояние",
-                "Карта 3 — Ваше физическое состояние",
-                "Карта 4 — Что сделать для исправления состояния",
-                "Карта 5 — Как провести день плодотворно"
-            ] 
-        },
-        { 
-            id: 6, 
-            name: "Самопознание", 
-            count: 7, 
-            desc: "Глубинный психологический портрет и предназначение", 
-            schemaImage: "shema7samopoznanie.jpg", 
-            about: "Расклад поможет понять себя и свое жизненное предназначение.",
-            positions: [
-                "Карта 1 — Кем пришла в этот мир ваша душа?",
-                "Карта 2 — Кто вы в этом мире?",
-                "Карта 3 — Чем вы сейчас занимаетесь?",
-                "Карта 4 — Для чего вы пришли в этот мир?",
-                "Карта 5 — Что будет, если идти по верному пути?",
-                "Карта 6 — Что ждет, если сбиться с пути?",
-                "Карта 7 — Как преодолеть себя?"
-            ] 
-        },
-        { 
-            id: 7, 
-            name: "Кельтский крест", 
-            count: 10, 
-            desc: "Глубокое и детальное понимание ситуации", 
-            schemaImage: "shema10krest.jpg", 
-            about: "Классический глубокий расклад для детального анализа ситуации.",
-            positions: [
-                "Карта 1 — Настоящее положение",
-                "Карта 2 — Препятствия и вызовы",
-                "Карта 3 — Основа и корни ситуации",
-                "Карта 4 — Прошлое влияние",
-                "Карта 5 — Цели и стремления",
-                "Карта 6 — Ближайшее будущее",
-                "Карта 7 — Внутреннее состояние",
-                "Карта 8 — Внешнее окружение",
-                "Карта 9 — Надежды и страхи",
-                "Карта 10 — Итог"
-            ] 
-        }
+        { id: 1, name: "Три карты", count: 3, desc: "Прошлое, настоящее, будущее и совет", schemaImage: "shema3.jpg", about: "Разложите карты перед собой в порядке, в котором вы их вытянули.", positions: ["Карта 1 — Прошлое", "Карта 2 — Настоящее", "Карта 3 — Будущее"] },
+        { id: 2, name: "Карта дня", count: 1, desc: "Элементарный экспресс-расклад на сегодня", schemaImage: "", about: "Используется для получения совета или предсказания на текущий день.", positions: ["Карта 1 — Совет дня"] },
+        { id: 3, name: "Выбор", count: 6, desc: "Принятие верного решения (два пути)", schemaImage: "shema6vibor.jpg", about: "Расклад позволяет увидеть решение проблемы или сделать правильный выбор.", positions: ["Вариант А: Суть", "Вариант А: Перспектива", "Вариант А: Итог", "Вариант Б: Суть", "Вариант Б: Перспектива", "Вариант Б: Итог"] },
+        { id: 4, name: "Что меня ждёт с этим человеком?", count: 6, desc: "Анализ отношений и совместного будущего", schemaImage: "shema6chelovek.jpg", about: "Позволяет проанализировать отношения.", positions: ["Текущие дела", "Чувства партнера", "Как видит вас партнер", "Будущее отношений", "Перемены", "От чего отказаться"] },
+        { id: 5, name: "Расклад на день", count: 5, desc: "Эмоциональное, энергетическое и физическое состояние", schemaImage: "shema5naden.jpg", about: "Поможет подготовиться к новому дню.", positions: ["Эмоциональное состояние", "Энергетическое состояние", "Физическое состояние", "Как исправить состояние", "Как провести день плодотворно"] },
+        { id: 6, name: "Самопознание", count: 7, desc: "Глубинный психологический портрет и предназначение", schemaImage: "shema7samopoznanie.jpg", about: "Расклад поможет понять себя.", positions: ["Кем пришла душа", "Кто вы в мире", "Чем занимаетесь", "Для чего пришли", "Верный путь", "Ошибочный путь", "Как преодолеть себя"] },
+        { id: 7, name: "Кельтский крест", count: 10, desc: "Глубокое и детальное понимание ситуации", schemaImage: "shema10krest.jpg", about: "Классический глубокий расклад.", positions: ["Настоящее положение", "Препятствия", "Основа ситуации", "Прошлое", "Цели", "Ближайшее будущее", "Внутреннее состояние", "Внешнее окружение", "Надежды и страхи", "Итог"] }
     ];
 
     let currentSpread = null;
@@ -646,60 +579,25 @@
         switchScreen('screen-schema');
     }
 
-    // С НАСТРОЙКОЙ АВТОФОКУСА КАМЕРЫ ДЛЯ МЕЛКИХ QR-КОДОВ
     function startScanning() {
         switchScreen('screen-scanner');
         document.getElementById('scan-next-container').style.display = 'none';
         isWaitingForNext = false;
         
         html5QrCode = new Html5Qrcode("reader");
-        
-        const config = { 
-            fps: 10, 
-            qrbox: { width: 250, height: 250 } 
-        };
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
         
         updateScannerInstruction();
 
-        // Сначала запрашиваем конкретно заднюю камеру (environment)
-        Html5Qrcode.getCameras().then(devices => {
-            if (devices && devices.length) {
-                // Ищем заднюю камеру
-                let rearCameraId = devices[devices.length - 1].id;
-                for (let device of devices) {
-                    if (device.label.toLowerCase().contains('back') || 
-                        device.label.toLowerCase().contains('задн') || 
-                        device.label.toLowerCase().contains('rear')) {
-                        rearCameraId = device.id;
-                        break;
-                    }
-                }
+        const cameraConfig = {
+            facingMode: "environment",
+            advanced: [{ focusMode: "continuous" }]
+        };
 
-                html5QrCode.start(
-                    rearCameraId, 
-                    config, 
-                    onScanSuccess, 
-                    onScanFailure
-                ).catch(err => {
-                    fallbackStart(config);
-                });
-            } else {
-                fallbackStart(config);
-            }
-        }).catch(err => {
-            fallbackStart(config);
-        });
-    }
-
-    function fallbackStart(config) {
-        html5QrCode.start(
-            { facingMode: "environment" }, 
-            config, 
-            onScanSuccess, 
-            onScanFailure
-        ).catch(err => {
-            alert("Не удалось запустить камеру. Проверьте, разрешен ли доступ к камере в настройках браузера и используется ли защищенное соединение (HTTPS).");
-            goHome();
+        html5QrCode.start(cameraConfig, config, onScanSuccess, onScanFailure).catch(err => {
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess, onScanFailure).catch(innerErr => {
+                alert("Не удалось запустить камеру. Используйте ручной выбор карт.");
+            });
         });
     }
 
@@ -711,20 +609,14 @@
 
     function onScanSuccess(decodedText, decodedResult) {
         if (isWaitingForNext) return;
-
-        isWaitingForNext = true;
-
         let cardData = findCardData(decodedText);
-
-        if (!cardData) {
-            cardData = { 
-                name: decodedText, 
-                meaning: "Распознанная карта", 
-                description: "Описание подтягивается из общего реестра Таро.",
-                image: "logotaro.png"
-            };
+        if (cardData) {
+            registerCard(cardData);
         }
+    }
 
+    function registerCard(cardData) {
+        isWaitingForNext = true;
         scannedCards.push({
             position: currentSpread.positions[currentStep],
             card: cardData
@@ -732,19 +624,22 @@
 
         if (navigator.vibrate) navigator.vibrate(100);
 
-        if (html5QrCode) {
+        if (html5QrCode && html5QrCode.isScanning) {
             html5QrCode.pause(true);
         }
 
-        document.getElementById('scanned-card-info').innerText = `Считана карта: ${cardData.name}`;
+        document.getElementById('screen-scanner').classList.remove('active');
+
+        document.getElementById('scanned-card-info').innerText = `Карта зачтена: ${cardData.name}`;
         
         const nextBtn = document.getElementById('btn-next-card');
         if (currentStep + 1 >= currentSpread.count) {
             nextBtn.innerText = "Посмотреть результаты расклада";
         } else {
-            nextBtn.innerText = `Сканировать следующую карту (${currentStep + 2}/${currentSpread.count})`;
+            nextBtn.innerText = `Следующая карта (${currentStep + 2}/${currentSpread.count})`;
         }
 
+        switchScreen('screen-scanner');
         document.getElementById('scan-next-container').style.display = 'block';
     }
 
@@ -763,27 +658,69 @@
         }
     }
 
-    function onScanFailure(error) {
-        // Игнорируем кадры без QR
+    function onScanFailure(error) {}
+
+    function openManualSelection() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().catch(() => {});
+        }
+        renderManualList();
+        switchScreen('screen-manual');
+    }
+
+    function closeManualSelection() {
+        startScanning();
+    }
+
+    function renderManualList() {
+        const container = document.getElementById('manual-cards-container');
+        container.innerHTML = '';
+
+        const categories = [
+            { id: 'major', title: '⭐ Старшие Арканы' },
+            { id: 'wands', title: '🔥 Жезлы (Огонь)' },
+            { id: 'cups', title: '💧 Кубки (Вода)' },
+            { id: 'swords', title: '⚔️ Мечи (Воздух)' },
+            { id: 'pentacles', title: '🪙 Пентакли (Земля)' }
+        ];
+
+        categories.forEach(cat => {
+            const titleEl = document.createElement('div');
+            titleEl.className = 'manual-category-title';
+            titleEl.innerText = cat.title;
+            container.appendChild(titleEl);
+
+            const gridEl = document.createElement('div');
+            gridEl.className = 'manual-grid';
+
+            for (let key in tarotDatabase) {
+                const card = tarotDatabase[key];
+                if (card.category === cat.id) {
+                    const itemEl = document.createElement('div');
+                    itemEl.className = 'manual-card-item';
+                    itemEl.innerHTML = `
+                        <img src="${card.image}" class="manual-thumb" onerror="this.src='logotaro.png'">
+                        <div class="manual-name">${card.name}</div>
+                    `;
+                    itemEl.onclick = () => registerCard(card);
+                    gridEl.appendChild(itemEl);
+                }
+            }
+            container.appendChild(gridEl);
+        });
     }
 
     function stopCameraAndShowResults() {
-        if (html5QrCode) {
-            html5QrCode.stop().then(() => {
-                showResults();
-            }).catch(() => {
-                showResults();
-            });
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().then(() => showResults()).catch(() => showResults());
         } else {
             showResults();
         }
     }
 
     function stopScanningAndBack() {
-        if (html5QrCode) {
-            html5QrCode.stop().finally(() => {
-                goHome();
-            });
+        if (html5QrCode && html5QrCode.isScanning) {
+            html5QrCode.stop().finally(() => goHome());
         } else {
             goHome();
         }
@@ -798,7 +735,6 @@
         scannedCards.forEach((item, idx) => {
             const div = document.createElement('div');
             div.className = 'result-item';
-            
             const cardImgSrc = item.card.image ? item.card.image : 'logotaro.png';
 
             div.innerHTML = `
@@ -816,10 +752,8 @@
         switchScreen('screen-results');
     }
 
-    // 4. ДИНАМИЧЕСКИЙ ГЕНЕРАТОР ГАДАНИЯ (ВСЕГДА УНИКАЛЬНЫЙ СОВЕТ)
     function showFortune() {
         if (scannedCards.length === 0) return;
-
         const fortuneBox = document.getElementById('fortune-box');
         const fortuneTextEl = document.getElementById('fortune-text');
 
@@ -830,58 +764,19 @@
         ];
         const randomIntro = intros[Math.floor(Math.random() * intros.length)];
 
-        let majorCount = 0;
-        let wandsCount = 0;
-        let cupsCount = 0;
-        let swordsCount = 0;
-        let pentaclesCount = 0;
-
-        scannedCards.forEach(item => {
-            const name = item.card.name.toUpperCase();
-            if (name.includes("ШУТ") || name.includes("МАГ") || name.includes("ЖРИЦА") || name.includes("ИМПЕРАТР") || 
-                name.includes("ИЕРОФАНТ") || name.includes("ВЛЮБЛЕНН") || name.includes("КОЛЕСНИЦ") || name.includes("СИЛА") || 
-                name.includes("ОТШЕЛЬНИК") || name.includes("ФОРТУН") || name.includes("СПРАВЕДЛИВ") || name.includes("ПОВЕШЕНН") || 
-                name.includes("СМЕРТЬ") || name.includes("УМЕРЕНН") || name.includes("ДЬЯВОЛ") || name.includes("БАШНЯ") || 
-                name.includes("ЗВЕЗДА") || name.includes("ЛУНА") || name.includes("СОЛНЦЕ") || name.includes("СУД") || name.includes("МИР")) {
-                majorCount++;
-            } else if (name.includes("ЖЕЗЛ")) wandsCount++;
-            else if (name.includes("КУБК") || name.includes("ЧАШ")) cupsCount++;
-            else if (name.includes("МЕЧ")) swordsCount++;
-            else if (name.includes("ПЕНТАКЛ") || name.includes("МОНЕТ")) pentaclesCount++;
-        });
-
-        let energyAnalysis = "";
-        if (majorCount >= Math.ceil(scannedCards.length / 2)) {
-            energyAnalysis = "В твоем раскладе доминируют <b>Старшие Арканы</b>. Ситуация находится под влиянием кармических и судьбоносных энергий, это поворотный момент.";
-        } else if (wandsCount >= cupsCount && wandsCount >= swordsCount && wandsCount >= pentaclesCount) {
-            energyAnalysis = "Правящая стихия расклада — <b>Огонь (Жезлы)</b>. Судьба требует от тебя решительных действий, страсти и личной инициативы.";
-        } else if (cupsCount >= wandsCount && cupsCount >= swordsCount && cupsCount >= pentaclesCount) {
-            energyAnalysis = "Правящая стихия — <b>Вода (Кубки)</b>. Ответ кроется в глубоких чувствах, эмоциональных связях и интуиции.";
-        } else if (swordsCount >= wandsCount && swordsCount >= cupsCount && swordsCount >= pentaclesCount) {
-            energyAnalysis = "Правящая стихия — <b>Воздух (Мечи)</b>. Ситуация требует холодного разума, логического анализа и честного взгляда на вещи.";
-        } else {
-            energyAnalysis = "Правящая стихия — <b>Земля (Пентакли)</b>. На передний план выходят практичность, материальные ресурсы и реальные результаты трудов.";
-        }
-
         let narrative = "<b>Связь карт в раскладе:</b><br>";
-        scannedCards.forEach((item, idx) => {
-            narrative += `• <b>${item.position}</b>: выпала карта <i>«${item.card.name}»</i>. Её смысл в том, что ${item.card.meaning.toLowerCase()}<br>`;
+        scannedCards.forEach((item) => {
+            narrative += `• <b>${item.position}</b>: выпала карта <i>«${item.card.name}»</i>. Её смысл: ${item.card.meaning.toLowerCase()}<br>`;
         });
 
         const lastCard = scannedCards[scannedCards.length - 1];
-        const advicePool = [
-            `Итоговый совет гадалки: опирайся на энергию карты «${lastCard.card.name}». Помни, что ${lastCard.card.meaning.toLowerCase()}`,
-            `Главный итог расклада ведет к карте «${lastCard.card.name}». Судьба подсказывает: ${lastCard.card.description.toLowerCase().slice(0, 120)}...`,
-            `Заключительный аккорд расклада — «${lastCard.card.name}». Пусть этот аркан станет твоим ориентиром.`
-        ];
-        const uniqueAdvice = advicePool[Math.floor(Math.random() * advicePool.length)];
+        const advice = `Итоговый совет гадалки: опирайся на энергию карты «${lastCard.card.name}». Помни, что ${lastCard.card.meaning.toLowerCase()}`;
 
         fortuneTextEl.innerHTML = `
             <p>${randomIntro}</p>
-            <p>${energyAnalysis}</p>
             <p>${narrative}</p>
             <p style="border-top: 1px dashed rgba(255,215,0,0.4); padding-top: 10px; color: #ffd700;">
-                <b>🔮 Предсказание Таролога:</b> ${uniqueAdvice}
+                <b>🔮 Предсказание Таролога:</b> ${advice}
             </p>
         `;
 
