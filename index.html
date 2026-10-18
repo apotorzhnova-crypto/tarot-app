@@ -917,31 +917,86 @@
         switchScreen('screen-results');
     }
 
-    // 4. ГЕНЕРАТОР ОБЩЕГО ГАДАНИЯ ОТ ТАРОЛОГА
+    // 4. ДИНАМИЧЕСКИЙ ГЕНЕРАТОР УНИКАЛЬНОГО ГАДАНИЯ
     function showFortune() {
         if (scannedCards.length === 0) return;
 
         const fortuneBox = document.getElementById('fortune-box');
         const fortuneTextEl = document.getElementById('fortune-text');
 
-        // Вводное слово
-        let introText = "Приветствую тебя, искатель истины. Карты перед тобой легли не случайно — они отражают вихрь энергий, окружающий твою судьбу в этот момент.<br><br>";
+        // Выбор случайного приветствия таролога
+        const intros = [
+            "Приветствую тебя, искатель истинного пути. Внимательно вглядись в карты — расклад сформировал уникальную картинку твоей судьбы.",
+            "Таро раскрыли перед нами карты. В этом сочетании зашифрован глубокий смысловой поток, касающийся твоего вопроса.",
+            "Приветствую. Энергетика этого расклада очень ярко подсвечивает то, что происходит в твоей жизни прямо сейчас.",
+            "Приветствую тебя. Арканы легли в особую комбинацию — давай разберем, о чем шепчет тебе судьба."
+        ];
+        const randomIntro = intros[Math.floor(Math.random() * intros.length)];
 
-        // Разбор первых ключевых карт
-        let firstCard = scannedCards[0];
-        let mainAnalysis = `<b>В основе твоего запроса</b> лежит энергия карты <i>«${firstCard.card.name}»</i> (${firstCard.position.toLowerCase()}). Это указывает на то, что ключевой вектор ситуации задает ${firstCard.card.meaning.toLowerCase()}<br><br>`;
+        // Анализ состава карт (Старшие арканы vs Младшие арканы по мастям)
+        let majorCount = 0;
+        let wandsCount = 0;
+        let cupsCount = 0;
+        let swordsCount = 0;
+        let pentaclesCount = 0;
 
-        // Связка карт между собой
-        let relationshipText = "";
-        if (scannedCards.length > 1) {
-            let lastCard = scannedCards[scannedCards.length - 1];
-            relationshipText = `Взаимодействие между первыми импульсами и итоговой картой <i>«${lastCard.card.name}»</i> показывает, как прошлое перетекает в будущее. Влияние карты <i>«${lastCard.card.name}»</i> подталкивает к тому, что результат будет напрямую зависеть от твоей осознанности. ${lastCard.card.meaning}<br><br>`;
+        scannedCards.forEach(item => {
+            const cardName = item.card.name.toUpperCase();
+            if (cardName.includes("0.") || cardName.includes("1.") || cardName.includes("2.") || 
+                cardName.includes("3.") || cardName.includes("4.") || cardName.includes("5.") || 
+                cardName.includes("6.") || cardName.includes("7.") || cardName.includes("8.") || 
+                cardName.includes("9.") || cardName.includes("10.") || cardName.includes("11.") || 
+                cardName.includes("12.") || cardName.includes("13.") || cardName.includes("14.") || 
+                cardName.includes("15.") || cardName.includes("16.") || cardName.includes("17.") || 
+                cardName.includes("18.") || cardName.includes("19.") || cardName.includes("20.") || cardName.includes("21.")) {
+                majorCount++;
+            } else if (cardName.includes("ЖЕЗЛ")) wandsCount++;
+            else if (cardName.includes("КУБК") || cardName.includes("ЧАШ")) cupsCount++;
+            else if (cardName.includes("МЕЧ")) swordsCount++;
+            else if (cardName.includes("ПЕНТАКЛ") || cardName.includes("МОНЕТ")) pentaclesCount++;
+        });
+
+        // Определение доминирующей стихии / энергии
+        let dominantEnergy = "";
+        if (majorCount >= Math.ceil(scannedCards.length / 2)) {
+            dominantEnergy = "В твоем раскладе преобладают <b>Старшие Арканы</b>. Это говорит о том, что ситуация находится под влиянием фатальных, судьбоносных сил, и происходящее станет важным жизненным уроком.";
+        } else if (wandsCount >= cupsCount && wandsCount >= swordsCount && wandsCount >= pentaclesCount && wandsCount > 0) {
+            dominantEnergy = "Главная стихия расклада — <b>Огонь (Жезлы)</b>. Твоя ситуация требует активных действий, страсти, проявления инициативы и смелости.";
+        } else if (cupsCount >= wandsCount && cupsCount >= swordsCount && cupsCount >= pentaclesCount && cupsCount > 0) {
+            dominantEnergy = "Преобладающая стихия — <b>Вода (Кубки)</b>. Ответ кроется в твоих чувствах, эмоциях, отношениях и интуиции. Прислушайся к своему сердцу.";
+        } else if (swordsCount >= wandsCount && swordsCount >= cupsCount && swordsCount >= pentaclesCount && swordsCount > 0) {
+            dominantEnergy = "Доминирующая стихия — <b>Воздух (Мечи)</b>. Ситуация требует проницательности, строгого логического анализа, честности и хладнокровия.";
+        } else if (pentaclesCount > 0) {
+            dominantEnergy = "Главная стихия — <b>Земля (Пентакли)</b>. Вопрос лежит в плоскости материального мира: финансов, работы, физического здоровья и практической выгоды.";
+        } else {
+            dominantEnergy = "В раскладе присутствует гармоничный баланс разных энергий, отражающий разностороннее развитие событий.";
         }
 
-        // Совет от гадалки
-        let adviceText = "<b>Совет карт Таро:</b> Доверяй своему внутреннему чутью и не бойся предпринимать шаги, на которые указывают арканы. Помни, что карты освещают путь, но каждый шаг по нему делаешь ты сам. Пусть мудрость Таро станет твоим надежным компасом!";
+        // Пошаговое построение цепочки смыслов для всех карт
+        let cardsStory = "<b>Разбор сочетания карт:</b><br>";
+        scannedCards.forEach((item, index) => {
+            const connector = index === 0 ? "Начальная точка:" : index === scannedCards.length - 1 ? "Итоговый вектор:" : "Развитие ситуации:";
+            cardsStory += `• <b>${item.position}</b> — <i>${item.card.name}</i>. ${connector} ${item.card.meaning}<br>`;
+        });
 
-        fortuneTextEl.innerHTML = `<p>${introText}${mainAnalysis}${relationshipText}${adviceText}</p>`;
+        // Генерация персонального совета на основе последней карты (итог)
+        const lastCard = scannedCards[scannedCards.length - 1];
+        const advices = [
+            `Главный совет арканов: обрати особое внимание на карту «${lastCard.card.name}». Карта намекает: ${lastCard.card.meaning.toLowerCase()} Доверься этому знаку.`,
+            `В качестве напутствия Таро подсвечивают энергию «${lastCard.card.name}». Действуй, учитывая, что ${lastCard.card.meaning.toLowerCase()}`,
+            `Итоговый ключ расклада — «${lastCard.card.name}». Вселенная советует помнить: ${lastCard.card.meaning.toLowerCase()}`
+        ];
+        const randomAdvice = advices[Math.floor(Math.random() * advices.length)];
+
+        // Сборка полного предсказания
+        fortuneTextEl.innerHTML = `
+            <p>${randomIntro}</p>
+            <p>${dominantEnergy}</p>
+            <p>${cardsStory}</p>
+            <p style="border-top: 1px dashed rgba(255,215,0,0.4); padding-top: 10px; color: #ffd700;">
+                <b>🔮 Напутствие Гадалки:</b> ${randomAdvice}
+            </p>
+        `;
         
         // Показываем блок и плавно прокручиваем к нему
         fortuneBox.style.display = 'block';
